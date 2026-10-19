@@ -25,7 +25,7 @@
                 <div class="otm-toolbar-row">
                     <a href="{{ route('hospital.ot.accountant.dashboard', ['slug' => $slug]) }}"
                         class="hms-btn hms-btn-outline otm-back-btn">
-                        <i class="bi bi-arrow-left me-1"></i> Back to Accountant
+                         Back to Accountant
                     </a>
                     <form method="GET" action="{{ route('hospital.ot.accountant.money', ['slug' => $slug]) }}"
                         class="ot-money-filter">

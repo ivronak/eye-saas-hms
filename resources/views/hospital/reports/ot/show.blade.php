@@ -20,7 +20,7 @@
 
 @section('page-actions')
     <a href="{{ route('hospital.reports.ot.index', ['slug' => $slug]) }}" class="hms-btn hms-btn-outline">
-        <i class="bi bi-arrow-left me-1"></i> Back to OT Reports
+        Back to OT Reports
     </a>
 @endsection
 
@@ -122,10 +122,10 @@
 @push('styles')
     <style>
         /*
-          OT Reports — generic report view (Design refresh)
-          Keep Blade/dynamic logic untouched; CSS-only + layout wrappers.
-          Palette follows hospital shell theme (#1B4F72 / #ebf5fbeb).
-        */
+              OT Reports — generic report view (Design refresh)
+              Keep Blade/dynamic logic untouched; CSS-only + layout wrappers.
+              Palette follows hospital shell theme (#1B4F72 / #ebf5fbeb).
+            */
 
         .ot-reports-page {
             --ot-primary: #ebf5fbeb;

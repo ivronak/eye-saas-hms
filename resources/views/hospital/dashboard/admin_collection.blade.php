@@ -18,7 +18,7 @@ used across the rest of the app. --}}
                     </nav>
                 </div>
                 <a href="{{ route('hospital.dashboard', ['slug' => $slug]) }}" class="hms-btn hms-btn-outline">
-                    <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
+                    Back to Dashboard
                 </a>
             </div>
         </div>
@@ -144,10 +144,10 @@ used across the rest of the app. --}}
 @push('styles')
     <style>
         /*
-                                  Total Collection (Design refresh)
-                                  Keep Blade/dynamic logic untouched; CSS-only + layout wrappers.
-                                  Palette follows hospital shell theme (#1B4F72 / #ebf5fbeb).
-                                */
+                                      Total Collection (Design refresh)
+                                      Keep Blade/dynamic logic untouched; CSS-only + layout wrappers.
+                                      Palette follows hospital shell theme (#1B4F72 / #ebf5fbeb).
+                                    */
 
         .acoll-page {
             --ot-secondary: #1B4F72;

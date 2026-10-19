@@ -4,7 +4,7 @@
 
 @section('page-actions')
     <a href="{{ route('hospital.medicine-groups.index', ['slug' => $slug]) }}" class="btn btn-outline-secondary btn-sm">
-        <i class="bi bi-arrow-left me-1"></i> Back to Groups
+        Back to Groups
     </a>
 @endsection
 
@@ -54,7 +54,8 @@
                     </div>
                     <div class="col-md-4">
                         <label class="form-label fw-medium">Type <span class="text-danger">*</span></label>
-                        <select name="usage_scope" class="form-select clinical-input @error('usage_scope') is-invalid @enderror" required>
+                        <select name="usage_scope"
+                            class="form-select clinical-input @error('usage_scope') is-invalid @enderror" required>
                             <option value="">Select type</option>
                             <option value="opd" @selected(old('usage_scope') === 'opd')>OPD</option>
                             <option value="ot" @selected(old('usage_scope') === 'ot')>OT</option>

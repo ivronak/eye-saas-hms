@@ -20,7 +20,7 @@
 
 @section('page-actions')
     <a href="{{ route('hospital.reports.ot.index', ['slug' => $slug]) }}" class="hms-btn hms-btn-outline">
-        <i class="bi bi-arrow-left me-1"></i> Back to OT Reports
+        Back to OT Reports
     </a>
 @endsection
 
@@ -110,10 +110,10 @@
 @push('styles')
     <style>
         /*
-          Lens Report — reuses the OT Reports theme (#1B4F72) and card chrome
-          (.ot-premium-card / .ot-premium-table / .ot-card-header / .ot-title-*),
-          same tokens as resources/views/hospital/reports/ot/show.blade.php.
-        */
+              Lens Report — reuses the OT Reports theme (#1B4F72) and card chrome
+              (.ot-premium-card / .ot-premium-table / .ot-card-header / .ot-title-*),
+              same tokens as resources/views/hospital/reports/ot/show.blade.php.
+            */
 
         .ot-reports-page {
             --ot-primary: #ebf5fbeb;

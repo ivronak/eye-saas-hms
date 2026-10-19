@@ -54,7 +54,7 @@ $defaultPaymentMode = $defaultPaymentMode ?? (((bool) ($counselling?->mediclaim 
                                 <strong>{{ currency_code() }} {{ number_format((float) $defaultPackageAmount, 2) }}</strong>
                             </div>
                             <a href="{{ route('hospital.ot.accountant.dashboard', ['slug' => $slug]) }}" class="hms-btn hms-btn-outline">
-                                <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
+                                 Back to Dashboard
                             </a>
                         </div>
                     </div>
