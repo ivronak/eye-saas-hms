@@ -375,7 +375,6 @@ class DashboardDrillDownApiController extends Controller
                 'end_date' => $endDate,
                 'doctor_id' => $doctorId,
                 'doctors' => HospitalUser::query()->whereHas('role', fn ($q) => $q->whereIn('slug', ['doctor', 'ot_doctor']))->orderBy('name')->get(['id', 'name']),
-                'ot_assistants' => HospitalUser::query()->where('status', 'active')->whereHas('role', fn ($q) => $q->where('slug', 'ot_assistant'))->orderBy('name')->get(['id', 'name']),
             ],
         ]);
     }
@@ -387,7 +386,7 @@ class DashboardDrillDownApiController extends Controller
     public function doctorOtAssignAssistant(string $slug, Request $request, int $bookingId): JsonResponse
     {
         $tenantId = (int) app('tenant')->id;
-        $booking = OtBooking::query()->with('preOp')->find($bookingId);
+        $booking = OtBooking::query()->with(['preOp', 'patient:id,doctor_id'])->find($bookingId);
         if (! $booking) {
             return response()->json(['success' => false, 'message' => 'Booking not found.'], 404);
         }
@@ -404,23 +403,30 @@ class DashboardDrillDownApiController extends Controller
             return response()->json(['success' => false, 'message' => 'This patient is not awaiting doctor consultation actions.'], 422);
         }
 
-        $validated = $request->validate([
-            'ot_assistant_id' => [
-                'required', 'integer',
-                Rule::exists('hospital_users', 'id')->where(function ($q) use ($tenantId) {
-                    $q->where('tenant_id', $tenantId)
-                        ->where('status', 'active')
-                        ->whereExists(function ($sub) {
-                            $sub->selectRaw('1')
-                                ->from('roles')
-                                ->whereColumn('roles.id', 'hospital_users.role_id')
-                                ->where('roles.slug', 'ot_assistant');
-                        });
-                }),
-            ],
-        ], [
-            'ot_assistant_id.required' => 'Select an OT Assistant to proceed with surgery.',
-        ]);
+        // OT Assistant is resolved purely from this booking's doctor's connected
+        // OT Assistant (doctor profile) — no manual pick any more (web pull
+        // 2026-10-19, DoctorOtListController::assignAssistant), same auto-assign
+        // OtWardController@storeVitals uses for "Ready for OT".
+        $linkedDoctorId = (int) ($booking->ot_doctor_id ?: ($booking->patient?->doctor_id ?? 0));
+        $defaultAssistantId = $linkedDoctorId > 0
+            ? HospitalUser::query()->whereKey($linkedDoctorId)->value('default_ot_assistant_id')
+            : null;
+
+        $isValidAssistant = $defaultAssistantId && HospitalUser::query()
+            ->whereKey($defaultAssistantId)
+            ->where('tenant_id', $tenantId)
+            ->where('status', 'active')
+            ->whereHas('role', fn ($q) => $q->where('slug', 'ot_assistant'))
+            ->exists();
+
+        if (! $isValidAssistant) {
+            return response()->json([
+                'success' => false,
+                'message' => "This doctor has no active OT Assistant connected. Connect one on the doctor's profile (Users → Edit Doctor) before proceeding.",
+            ], 422);
+        }
+
+        $validated = ['ot_assistant_id' => (int) $defaultAssistantId];
 
         DB::transaction(function () use ($booking, $validated, $tenantId): void {
             OtPreOp::query()->updateOrCreate(
@@ -438,7 +444,7 @@ class DashboardDrillDownApiController extends Controller
             ]);
         });
 
-        return response()->json(['success' => true, 'message' => 'OT Assistant assigned. Patient is Ready for OT.', 'data' => ['ot_status' => $booking->fresh()->ot_status]]);
+        return response()->json(['success' => true, 'message' => 'Patient assigned to OT Assistant and marked Ready for OT.', 'data' => ['ot_status' => $booking->fresh()->ot_status]]);
     }
 
     /**
