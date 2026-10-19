@@ -134,7 +134,6 @@ Roles / History panel design. --}}
                                 </thead>
                                 <tbody>
                                     @php
-                                        $otAssistants = $otAssistants ?? collect();
                                         $authUser = auth('hospital_user')->user();
                                         $canActAsDoctor = $authUser && (
                                             (method_exists($authUser, 'isSuperUser') && $authUser->isSuperUser())
@@ -182,16 +181,9 @@ Roles / History panel design. --}}
                                                             action="{{ route('hospital.dashboard.doctor-ot.assign-assistant', ['slug' => $slug, 'bookingId' => $booking->id]) }}"
                                                             class="d-flex flex-wrap justify-content-end gap-2 align-items-center">
                                                             @csrf
-                                                            <select name="ot_assistant_id" class="form-select form-select-sm"
-                                                                style="min-width:160px" required>
-                                                                <option value="">OT Assistant…</option>
-                                                                @foreach($otAssistants as $asst)
-                                                                    <option value="{{ $asst->id }}">{{ $asst->name }}</option>
-                                                                @endforeach
-                                                            </select>
                                                             <button type="submit" class="btn btn-sm btn-primary"
-                                                                title="Patient ready — continue OT with assistant">
-                                                                <i class="bi bi-person-check me-1"></i> Assign OT Assistant
+                                                                title="Patient ready — sends to this doctor's connected OT Assistant">
+                                                                <i class="bi bi-person-check me-1"></i> Ready for OT
                                                             </button>
                                                         </form>
                                                         <form method="POST"

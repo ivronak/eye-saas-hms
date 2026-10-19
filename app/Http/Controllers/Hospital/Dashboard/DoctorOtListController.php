@@ -9,7 +9,6 @@ use App\Models\Hospital\OT\OtPreOp;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 /**
@@ -81,14 +80,6 @@ class DoctorOtListController extends Controller
             ->orderBy('name')
             ->get(['id', 'name']);
 
-        $tenantId = (int) app('tenant')->id;
-        $otAssistants = HospitalUser::query()
-            ->where('tenant_id', $tenantId)
-            ->where('status', 'active')
-            ->whereHas('role', fn ($q) => $q->where('slug', 'ot_assistant'))
-            ->orderBy('name')
-            ->get(['id', 'name']);
-
         return view('hospital.dashboard.doctor_ot_list', [
             'slug' => $slug,
             'bookings' => $bookings,
@@ -97,7 +88,6 @@ class DoctorOtListController extends Controller
             'doctor' => $doctor,
             'doctorId' => $doctorId,
             'doctors' => $doctors,
-            'otAssistants' => $otAssistants,
             'consultOnly' => $consultOnly,
             'queue' => $queue,
         ]);
@@ -110,7 +100,7 @@ class DoctorOtListController extends Controller
     {
         $tenantId = (int) app('tenant')->id;
         $booking = OtBooking::query()
-            ->with('preOp')
+            ->with(['preOp', 'patient:id,doctor_id'])
             ->whereKey($bookingId)
             ->firstOrFail();
 
@@ -121,26 +111,26 @@ class DoctorOtListController extends Controller
             return redirect()->back()->with('error', 'This patient is not awaiting doctor consultation actions.');
         }
 
-        $validated = $request->validate([
-            'ot_assistant_id' => [
-                'required',
-                'integer',
-                Rule::exists('hospital_users', 'id')->where(function ($q) use ($tenantId) {
-                    $q->where('tenant_id', $tenantId)
-                        ->where('status', 'active')
-                        ->whereExists(function ($sub) {
-                            $sub->selectRaw('1')
-                                ->from('roles')
-                                ->whereColumn('roles.id', 'hospital_users.role_id')
-                                ->where('roles.slug', 'ot_assistant');
-                        });
-                }),
-            ],
-        ], [
-            'ot_assistant_id.required' => 'Select an OT Assistant to proceed with surgery.',
-        ]);
+        // OT Assistant is resolved purely from this booking's doctor's connected
+        // OT Assistant (set on the doctor's profile) — no manual pick in the UI,
+        // same auto-assign OtWardController@storeVitals uses for "Ready for OT".
+        $linkedDoctorId = (int) ($booking->ot_doctor_id ?: ($booking->patient?->doctor_id ?? 0));
+        $defaultAssistantId = $linkedDoctorId > 0
+            ? HospitalUser::query()->whereKey($linkedDoctorId)->value('default_ot_assistant_id')
+            : null;
 
-        DB::transaction(function () use ($booking, $validated, $tenantId): void {
+        $isValidAssistant = $defaultAssistantId && HospitalUser::query()
+            ->whereKey($defaultAssistantId)
+            ->where('tenant_id', $tenantId)
+            ->where('status', 'active')
+            ->whereHas('role', fn ($q) => $q->where('slug', 'ot_assistant'))
+            ->exists();
+
+        if (! $isValidAssistant) {
+            return redirect()->back()->with('error', 'This doctor has no active OT Assistant connected. Connect one on the doctor\'s profile (Users → Edit Doctor) before proceeding.');
+        }
+
+        DB::transaction(function () use ($booking, $defaultAssistantId, $tenantId): void {
             OtPreOp::query()->updateOrCreate(
                 ['tenant_id' => $tenantId, 'ot_booking_id' => $booking->id],
                 [
@@ -150,7 +140,7 @@ class DoctorOtListController extends Controller
             );
 
             $booking->update([
-                'ot_assistant_id' => (int) $validated['ot_assistant_id'],
+                'ot_assistant_id' => (int) $defaultAssistantId,
                 'ot_status' => OtBooking::STATUS_READY,
                 'attended_at' => $booking->attended_at ?? now(),
             ]);
@@ -158,7 +148,7 @@ class DoctorOtListController extends Controller
 
         return redirect()
             ->back()
-            ->with('success', 'OT Assistant assigned. Patient is Ready for OT.');
+            ->with('success', 'Patient assigned to OT Assistant and marked Ready for OT.');
     }
 
     /**
