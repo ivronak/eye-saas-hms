@@ -27,9 +27,6 @@ panel bar, table) sits inside one bordered card, per design refresh. --}}
                     </span>
                     <div class="flex-grow-1">
                         <h5 class="ot-title">Appointment Register</h5>
-                        <div class="ot-subtitle">Pre-registration appointments booked over
-                            phone/walk-in/online/referral.
-                        </div>
                     </div>
                 </div>
                 <div class="d-flex align-items-center gap-2 flex-wrap ot-header-actions">
