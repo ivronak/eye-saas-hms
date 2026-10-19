@@ -18,14 +18,15 @@ used across the rest of the OT accountant module (see payment.blade.php). --}}
                             <nav class="ot-breadcrumb" aria-label="breadcrumb">
                                 <a href="{{ route('hospital.dashboard', ['slug' => $slug]) }}">Home</a>
                                 <span class="ot-breadcrumb-sep">/</span>
-                                <a href="{{ route('hospital.ot.accountant.dashboard', ['slug' => $slug, 'filter' => 'refunds']) }}">Billing</a>
+                                <a
+                                    href="{{ route('hospital.ot.accountant.dashboard', ['slug' => $slug, 'filter' => 'refunds']) }}">Billing</a>
                                 <span class="ot-breadcrumb-sep">/</span>
                                 <span class="ot-breadcrumb-current">Booking #{{ $booking->id }}</span>
                             </nav>
                         </div>
                         <a href="{{ route('hospital.ot.accountant.dashboard', ['slug' => $slug, 'filter' => 'refunds']) }}"
                             class="hms-btn hms-btn-outline">
-                            <i class="bi bi-arrow-left me-1"></i> Back to Refunds
+                            Back to Refunds
                         </a>
                     </div>
                 </div>
@@ -46,7 +47,8 @@ used across the rest of the OT accountant module (see payment.blade.php). --}}
                 <div class="card ot-premium-card border-0">
                     <div class="ot-card-header">
                         <div class="ot-title-wrap">
-                            <span class="ot-title-icon" aria-hidden="true"><i class="bi bi-arrow-return-left" style="font-size: 1.1rem;"></i></span>
+                            <span class="ot-title-icon" aria-hidden="true"><i class="bi bi-arrow-return-left"
+                                    style="font-size: 1.1rem;"></i></span>
                             <h5 class="ot-title mb-0">Full Refund — Surgery Refused</h5>
                         </div>
                     </div>
@@ -54,11 +56,13 @@ used across the rest of the OT accountant module (see payment.blade.php). --}}
                         <div class="row g-3 mb-4">
                             <div class="col-md-6">
                                 <label class="form-label text-muted small">Patient</label>
-                                <input type="text" class="form-control ot-readonly" readonly value="{{ $patient?->full_name ?? '-' }}">
+                                <input type="text" class="form-control ot-readonly" readonly
+                                    value="{{ $patient?->full_name ?? '-' }}">
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label text-muted small">UHID</label>
-                                <input type="text" class="form-control ot-readonly" readonly value="{{ $patient?->patient_code ?? '-' }}">
+                                <input type="text" class="form-control ot-readonly" readonly
+                                    value="{{ $patient?->patient_code ?? '-' }}">
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label text-muted small">Total Paid</label>
@@ -118,10 +122,10 @@ used across the rest of the OT accountant module (see payment.blade.php). --}}
 @push('styles')
     <style>
         /*
-          OT Full Refund (Design refresh)
-          Keep Blade/dynamic logic untouched; CSS-only + layout wrappers.
-          Palette follows hospital shell theme (#1B4F72) — mirrors payment.blade.php.
-        */
+              OT Full Refund (Design refresh)
+              Keep Blade/dynamic logic untouched; CSS-only + layout wrappers.
+              Palette follows hospital shell theme (#1B4F72) — mirrors payment.blade.php.
+            */
 
         .ot-refund-page {
             --ot-secondary: #1B4F72;
@@ -138,8 +142,15 @@ used across the rest of the OT accountant module (see payment.blade.php). --}}
         }
 
         @keyframes ot-page-in {
-            from { opacity: 0; transform: translateY(8px); }
-            to   { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .ot-refund-page .btn,
@@ -260,7 +271,10 @@ used across the rest of the OT accountant module (see payment.blade.php). --}}
             color: #ffffff;
         }
 
-        .ot-alert { border-radius: 14px; font-weight: 650; }
+        .ot-alert {
+            border-radius: 14px;
+            font-weight: 650;
+        }
 
         .ot-refund-page .form-label {
             font-weight: 800;
@@ -302,6 +316,7 @@ used across the rest of the OT accountant module (see payment.blade.php). --}}
         }
 
         @media (prefers-reduced-motion: reduce) {
+
             .ot-refund-page,
             .ot-premium-card,
             .ot-refund-page .btn,

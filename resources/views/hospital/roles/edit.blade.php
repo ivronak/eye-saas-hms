@@ -255,7 +255,7 @@ across the rest of the app. --}}
             </nav>
         </div>
         <a href="{{ route('hospital.roles.index', ['slug' => $slug]) }}" class="hms-btn hms-btn-outline">
-            <i class="bi bi-arrow-left me-1"></i> Back to Roles
+             Back to Roles
         </a>
     </div>
 </div>

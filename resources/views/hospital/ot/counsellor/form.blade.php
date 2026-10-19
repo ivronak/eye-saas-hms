@@ -19,7 +19,7 @@ used across the rest of the app. --}}
                                     </nav>
                                 </div>
                                 <a href="{{ route('hospital.ot.counsellor.dashboard', ['slug' => $slug]) }}" class="hms-btn hms-btn-outline">
-                                    <i class="bi bi-arrow-left me-1"></i> Back to Dashboard
+                                     Back to Dashboard
                                 </a>
                             </div>
                         </div>
