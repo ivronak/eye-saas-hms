@@ -40,15 +40,45 @@
     <div class="{{ $useModalLayout ? 'case-master-page' : '' }}">
         @if($useModalLayout)
         <div class="case-master-outer-card">
-            <div class="case-master-header-block">
-                <div class="case-master-header-title"><i class="bi bi-collection"></i> {{ $title }}</div>
-                <nav class="case-master-breadcrumb" aria-label="breadcrumb">
-                    <a href="{{ route('hospital.dashboard', ['slug' => $slug]) }}">Home</a>
-                    <span class="case-master-breadcrumb-sep">/</span>
-                    <span class="case-master-breadcrumb-current">{{ $title }}</span>
-                </nav>
+            <div class="case-master-header-block case-master-header-row">
+                <div>
+                    <div class="case-master-header-title"><i class="bi bi-collection"></i> {{ $title }}</div>
+                    <nav class="case-master-breadcrumb" aria-label="breadcrumb">
+                        <a href="{{ route('hospital.dashboard', ['slug' => $slug]) }}">Home</a>
+                        <span class="case-master-breadcrumb-sep">/</span>
+                        <span class="case-master-breadcrumb-current">{{ $title }}</span>
+                    </nav>
+                </div>
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    @if($showBackButton)
+                        @php
+                            $backUrl = match (auth('hospital_user')->user()?->role?->slug) {
+                                'doctor' => route('hospital.dashboard', ['slug' => $slug]),
+                                'receptionist' => route('hospital.profile.show', ['slug' => $slug]),
+                                default => route('hospital.masters.index', ['slug' => $slug]),
+                            };
+                        @endphp
+                        <a href="{{ $backUrl }}" class="btn btn-light case-master-back-btn">
+                            Back
+                        </a>
+                    @endif
+                    @if(($canAdd || $canEdit) && $showDiagnosis)
+                        <button type="button" class="btn btn-outline-secondary case-master-diagnosis-btn"
+                            style="border-radius:12px;font-weight:700;border-color:rgba(27,79,114,.3);color:#1B4F72;"
+                            data-bs-toggle="modal" data-bs-target="#linkByDiagnosisModal">
+                            <i class="bi bi-diagram-3 me-1"></i> Link by Diagnosis
+                        </button>
+                    @endif
+                    @if($canAdd)
+                        <button type="button" class="btn btn-primary case-master-add-btn" data-bs-toggle="modal"
+                            data-bs-target="#masterFormModal" onclick="resetForm()">
+                            <i class="bi bi-plus-lg me-1"></i> Add {{ Str::singular($title) }}
+                        </button>
+                    @endif
+                </div>
             </div>
         @endif
+        @unless($useModalLayout)
         <div class="case-master-toolbar">
             <div class="d-flex align-items-center gap-2 flex-wrap">
                 @if($showBackButton)
@@ -72,14 +102,9 @@
                         <i class="bi bi-diagram-3 me-1"></i> Link by Diagnosis
                     </button>
                 @endif
-                @if($canAdd && $useModalLayout)
-                    <button type="button" class="btn btn-primary case-master-add-btn" data-bs-toggle="modal"
-                        data-bs-target="#masterFormModal" onclick="resetForm()">
-                        <i class="bi bi-plus-lg me-1"></i> Add {{ Str::singular($title) }}
-                    </button>
-                @endif
             </div>
         </div>
+        @endunless
 
         <div class="row g-4">
             @if(($canAdd || $canEdit) && !$useModalLayout)
@@ -142,6 +167,15 @@
 
             <div class="{{ ($canAdd || $canEdit) && !$useModalLayout ? 'col-lg-8' : 'col-12' }}">
                 <div class="card border-0 shadow-sm rounded-4 {{ $useModalLayout ? 'case-master-card' : '' }}">
+                    @if($useModalLayout)
+                        <div class="case-master-card-header">
+                            <div class="case-master-card-title-wrap">
+                                <span class="case-master-card-icon"><i class="bi bi-collection"></i></span>
+                                <h5 class="case-master-card-title mb-0">{{ $title }}</h5>
+                            </div>
+                            <span class="case-master-count-pill">{{ $records->count() }} record{{ $records->count() === 1 ? '' : 's' }}</span>
+                        </div>
+                    @endif
                     <div class="card-body p-0">
                         <div class="table-responsive {{ $useModalLayout ? 'case-master-table-wrap' : '' }}">
                             <table
@@ -770,6 +804,14 @@
                 padding: 0 0 1rem;
             }
 
+            .case-master-header-row {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 1rem;
+                flex-wrap: wrap;
+            }
+
             .case-master-header-title {
                 font-weight: 800;
                 font-size: 1.3rem;
@@ -871,6 +913,51 @@
                 overflow: hidden;
             }
 
+            .case-master-card-header {
+                background: linear-gradient(135deg, #174562, #1b4f72) !important;
+                padding: 1.1rem 1.4rem;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 1rem;
+                flex-wrap: wrap;
+            }
+
+            .case-master-card-title-wrap {
+                display: flex;
+                align-items: center;
+                gap: .75rem;
+            }
+
+            .case-master-card-icon {
+                width: 38px;
+                height: 38px;
+                border-radius: 12px;
+                background: rgba(255, 255, 255, .16);
+                color: #fff;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 1.05rem;
+                flex: 0 0 auto;
+            }
+
+            .case-master-card-title {
+                color: #fff !important;
+                font-weight: 800;
+                letter-spacing: -.2px;
+            }
+
+            .case-master-count-pill {
+                background: rgba(255, 255, 255, .14);
+                color: #fff;
+                font-weight: 800;
+                font-size: .76rem;
+                padding: .4rem .85rem;
+                border-radius: 999px;
+                white-space: nowrap;
+            }
+
             .case-master-table-wrap {
                 overflow-x: auto;
             }
@@ -882,14 +969,13 @@
             }
 
             .case-master-table thead th {
-                background: #F8FAFC !important;
-                color: #4A5568 !important;
+                background: var(--case-primary) !important;
+                color: #ffffff !important;
                 border: 0 !important;
-                border-bottom: 1px solid #E2E8F0 !important;
-                padding: .7rem 1rem !important;
-                font-size: .75rem;
-                letter-spacing: .05em;
-                font-weight: 700;
+                padding: .85rem 1rem !important;
+                font-size: .72rem;
+                letter-spacing: .06em;
+                font-weight: 800;
                 text-transform: uppercase;
                 text-align: left;
             }
@@ -898,18 +984,22 @@
                 transition: background 150ms ease;
             }
 
-            .case-master-table tbody tr:hover {
-                background: #F5F8FC;
-            }
-
             .case-master-table tbody td {
                 background: transparent;
                 border: 0;
                 border-bottom: 1px solid rgba(27, 79, 114, .08);
                 color: var(--case-primary);
-                padding: .75rem 1rem;
+                padding: .8rem 1rem;
                 vertical-align: middle;
                 font-weight: 600;
+            }
+
+            .case-master-table tbody tr:nth-child(even) td {
+                background: rgba(235, 245, 251, .35);
+            }
+
+            .case-master-table tbody tr:hover td {
+                background: var(--case-soft);
             }
 
             .case-master-table tbody tr:last-child td {
