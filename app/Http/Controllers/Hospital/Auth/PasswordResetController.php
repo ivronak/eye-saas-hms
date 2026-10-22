@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Hospital\Auth;
 use App\Http\Controllers\Controller;
 use App\Services\Auth\HospitalPasswordOtp;
 use App\Support\EmailRules;
+use App\Models\Hospital\HospitalUser;
+use App\Models\Platform\Tenant;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -28,6 +30,41 @@ class PasswordResetController extends Controller
             'slug' => $slug,
             'hospitalName' => $tenant?->name ?? 'Hospital',
         ]);
+    }
+
+    /** Forgot password from the common /login page (hospital not known yet). */
+    public function showGlobalForm(): View
+    {
+        return view('hospital.auth.forgot-password', [
+            'slug' => null,
+            'hospitalName' => 'Eyenosis',
+            'formAction' => route('password.email'),
+            'backUrl' => route('login'),
+        ]);
+    }
+
+    public function sendGlobal(Request $request, HospitalPasswordOtp $otp): RedirectResponse
+    {
+        $request->validate([
+            'email' => EmailRules::required(),
+        ], EmailRules::messages('email'));
+
+        $email = trim((string) $request->input('email'));
+        $user = HospitalUser::withoutTenantScope()
+            ->where('email', $email)
+            ->where('status', 'active')
+            ->whereNull('deleted_at')
+            ->first();
+        $tenant = $user ? Tenant::find($user->tenant_id) : null;
+
+        if (! $tenant) {
+            return back()->withErrors(['email' => 'No active account found with this email.'])->withInput();
+        }
+
+        $request->session()->put('pwd_otp_email', $email);
+        $request->session()->put('pwd_otp_code', $otp->issue($tenant->id, $email));
+
+        return redirect()->route('hospital.password.otp', ['slug' => $tenant->slug]);
     }
 
     /** Step 1: email -> OTP screen (OTP is shown there, not emailed). */

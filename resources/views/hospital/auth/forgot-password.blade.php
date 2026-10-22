@@ -220,7 +220,7 @@
                         </div>
                     @endif
 
-                    <form method="POST" action="{{ route('hospital.password.email', ['slug' => $slug]) }}">
+                    <form method="POST" action="{{ $formAction ?? route('hospital.password.email', ['slug' => $slug]) }}">
                         @csrf
 
                         <div class="form-group">
@@ -236,7 +236,7 @@
                     </form>
 
                     <div class="login-footer">
-                        <a href="{{ route('hospital.login', ['slug' => $slug]) }}">
+                        <a href="{{ $backUrl ?? route('hospital.login', ['slug' => $slug]) }}">
                             <i class="fa-solid fa-arrow-left"></i> Back to Login
                         </a>
                     </div>
