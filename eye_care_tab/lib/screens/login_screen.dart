@@ -7,6 +7,7 @@ import '../constants/app_breakpoints.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_radius.dart';
 import '../services/auth_service.dart';
+import 'forgot_password_screen.dart';
 import 'tablet_shell.dart';
 // Super Admin access disabled in the apps at the client's request — see
 // _onLogoTap() below. Kept commented (not deleted) in case it's needed
@@ -474,7 +475,9 @@ class _LoginScreenState extends State<LoginScreen> with TickerProviderStateMixin
             Align(
               alignment: Alignment.centerRight,
               child: GestureDetector(
-                onTap: () {},
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const ForgotPasswordScreen()),
+                ),
                 child: Text(
                   'Forgot Password?',
                   style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.blue),

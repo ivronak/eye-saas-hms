@@ -93,6 +93,9 @@ Route::prefix('{slug}')
         // ================================================================
         Route::get('/forgot-password', [PasswordResetController::class, 'showForgotForm'])->name('password.request');
         Route::post('/forgot-password', [PasswordResetController::class, 'sendResetLink'])->name('password.email');
+        Route::get('/forgot-password/otp', [PasswordResetController::class, 'showOtpForm'])->name('password.otp');
+        Route::post('/forgot-password/otp', [PasswordResetController::class, 'verifyOtp'])->name('password.otp.verify');
+        Route::post('/forgot-password/otp/resend', [PasswordResetController::class, 'resendOtp'])->name('password.otp.resend');
         Route::get('/reset-password/{token}', [PasswordResetController::class, 'showResetForm'])->name('password.reset');
         Route::post('/reset-password', [PasswordResetController::class, 'resetPassword'])->name('password.update');
 

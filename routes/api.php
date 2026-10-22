@@ -223,6 +223,12 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
 
             // Auth — no token required
             Route::post('/auth/login', [AuthController::class, 'login'])->name('auth.login');
+            Route::post('/auth/forgot-password', [AuthController::class, 'forgotPassword'])
+                ->middleware('throttle:10,1')->name('auth.forgot');
+            Route::post('/auth/verify-otp', [AuthController::class, 'verifyPasswordOtp'])
+                ->middleware('throttle:10,1')->name('auth.verify.otp');
+            Route::post('/auth/reset-password', [AuthController::class, 'resetPassword'])
+                ->middleware('throttle:10,1')->name('auth.reset');
             Route::post('/auth/logout', [AuthController::class, 'logout'])
                 ->middleware('auth:sanctum')
                 ->name('auth.logout');

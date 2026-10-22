@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Hospital\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Services\Auth\HospitalPasswordOtp;
 use App\Support\EmailRules;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -29,19 +30,82 @@ class PasswordResetController extends Controller
         ]);
     }
 
-    public function sendResetLink(Request $request, string $slug): RedirectResponse
+    /** Step 1: email -> OTP screen (OTP is shown there, not emailed). */
+    public function sendResetLink(Request $request, string $slug, HospitalPasswordOtp $otp): RedirectResponse
     {
         $request->validate([
             'email' => EmailRules::required(),
         ], EmailRules::messages('email'));
 
-        $status = Password::broker('hospital_users')->sendResetLink(
-            $request->only('email')
-        );
+        $tenant = app('tenant');
+        $email = trim((string) $request->input('email'));
 
-        return $status === Password::RESET_LINK_SENT
-            ? back()->with('success', __($status))
-            : back()->withErrors(['email' => __($status)])->withInput();
+        if (! $otp->findUser($tenant->id, $email)) {
+            return back()->withErrors(['email' => 'No active account found with this email.'])->withInput();
+        }
+
+        $request->session()->put('pwd_otp_email', $email);
+        $request->session()->put('pwd_otp_code', $otp->issue($tenant->id, $email));
+
+        return redirect()->route('hospital.password.otp', ['slug' => $slug]);
+    }
+
+    public function showOtpForm(Request $request, string $slug, HospitalPasswordOtp $otp): View|RedirectResponse
+    {
+        $email = $request->session()->get('pwd_otp_email');
+        if (! $email) {
+            return redirect()->route('hospital.password.request', ['slug' => $slug]);
+        }
+
+        $tenant = app('tenant');
+
+        return view('hospital.auth.forgot-password-otp', [
+            'slug' => $slug,
+            'hospitalName' => $tenant?->name ?? 'Hospital',
+            'email' => $email,
+            'otp' => $request->session()->get('pwd_otp_code'),
+            'wait' => $otp->waitSeconds($tenant->id, $email),
+        ]);
+    }
+
+    public function resendOtp(Request $request, string $slug, HospitalPasswordOtp $otp): RedirectResponse
+    {
+        $email = $request->session()->get('pwd_otp_email');
+        $tenant = app('tenant');
+
+        if (! $email || ! $otp->findUser($tenant->id, $email)) {
+            return redirect()->route('hospital.password.request', ['slug' => $slug]);
+        }
+
+        if ($otp->waitSeconds($tenant->id, $email) > 0) {
+            return back()->withErrors(['otp' => 'Please wait before requesting a new OTP.']);
+        }
+
+        $request->session()->put('pwd_otp_code', $otp->issue($tenant->id, $email));
+
+        return back()->with('success', 'A new OTP has been generated.');
+    }
+
+    public function verifyOtp(Request $request, string $slug, HospitalPasswordOtp $otp): RedirectResponse
+    {
+        $request->validate(['otp' => ['required', 'digits:6']]);
+
+        $email = $request->session()->get('pwd_otp_email');
+        $tenant = app('tenant');
+        $user = $email ? $otp->findUser($tenant->id, $email) : null;
+
+        if (! $user) {
+            return redirect()->route('hospital.password.request', ['slug' => $slug]);
+        }
+
+        $token = $otp->verify($user, (string) $request->input('otp'));
+        if (! $token) {
+            return back()->withErrors(['otp' => 'Invalid or expired OTP.']);
+        }
+
+        $request->session()->forget(['pwd_otp_email', 'pwd_otp_code']);
+
+        return redirect()->route('hospital.password.reset', ['slug' => $slug, 'token' => $token, 'email' => $email]);
     }
 
     public function showResetForm(string $slug, string $token): View

@@ -203,7 +203,7 @@
                             <i class="fa-solid fa-lock"></i>
                         </div>
                         <h1>Forgot Password</h1>
-                        <p>Enter your email to receive a password reset link</p>
+                        <p>Enter your email to get a one-time password (OTP)</p>
                     </div>
 
                     @if(session('success'))
@@ -231,7 +231,7 @@
                         </div>
 
                         <button type="submit" class="btn-login">
-                            <i class="fa-solid fa-paper-plane"></i> Send Reset Link
+                            <i class="fa-solid fa-paper-plane"></i> Continue
                         </button>
                     </form>
 
