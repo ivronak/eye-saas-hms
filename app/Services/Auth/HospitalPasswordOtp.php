@@ -24,7 +24,7 @@ class HospitalPasswordOtp
     {
         return HospitalUser::query()
             ->where('tenant_id', $tenantId)
-            ->where('email', trim($email))
+            ->whereRaw('LOWER(email) = ?', [strtolower(trim($email))])
             ->where('status', 'active')
             ->whereNull('deleted_at')
             ->first();

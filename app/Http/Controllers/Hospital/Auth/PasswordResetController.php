@@ -51,7 +51,7 @@ class PasswordResetController extends Controller
 
         $email = trim((string) $request->input('email'));
         $user = HospitalUser::withoutTenantScope()
-            ->where('email', $email)
+            ->whereRaw('LOWER(email) = ?', [strtolower($email)])
             ->where('status', 'active')
             ->whereNull('deleted_at')
             ->first();
