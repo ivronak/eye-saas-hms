@@ -5,10 +5,9 @@ namespace App\Http\Controllers\Hospital\Auth;
 use App\Http\Controllers\Controller;
 use App\Services\Auth\HospitalPasswordOtp;
 use App\Support\EmailRules;
-use App\Models\Hospital\HospitalUser;
-use App\Models\Platform\Tenant;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
@@ -50,12 +49,13 @@ class PasswordResetController extends Controller
         ], EmailRules::messages('email'));
 
         $email = trim((string) $request->input('email'));
-        $user = HospitalUser::withoutTenantScope()
+        // Plain queries: no hospital is selected yet, so skip the tenant-aware models.
+        $tenantId = DB::table('hospital_users')
             ->whereRaw('LOWER(email) = ?', [strtolower($email)])
             ->where('status', 'active')
             ->whereNull('deleted_at')
-            ->first();
-        $tenant = $user ? Tenant::find($user->tenant_id) : null;
+            ->value('tenant_id');
+        $tenant = $tenantId ? DB::table('tenants')->where('id', $tenantId)->first(['id', 'slug']) : null;
 
         if (! $tenant) {
             return back()->withErrors(['email' => 'No active account found with this email.'])->withInput();
