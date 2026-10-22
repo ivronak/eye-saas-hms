@@ -1,0 +1,49 @@
+# Made by the AI Project Dashboard on its own build branch — TEST builds only.
+# The app is pointed at the beta before it is built; a build that still has the live address stops.
+workflows:
+  aidash_android_eye_care_app:
+    name: Test APK - eye_care_app (beta)
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    environment:
+      flutter: stable
+    scripts:
+      - name: Point the app at the beta (never live)
+        script: |
+          cd "eye_care_app"
+          LIVE_RE=$(printf '%s' "$LIVE_HOST" | sed 's/[.]/\\./g')
+          for f in $(grep -rlE "https?://(www\.)?$LIVE_RE" lib assets 2>/dev/null || true); do
+            perl -pi -e "s#https?://(www\.)?\Q$LIVE_HOST\E(?![\w-]|\.\w)#https://$BETA_HOST#g" "$f"
+            echo "beta address in $f"
+          done
+          if grep -rqE "//(www\.)?$LIVE_RE" lib assets 2>/dev/null; then echo "The live address is still in the app"; exit 1; fi
+      - name: Build the test APK
+        script: |
+          cd "eye_care_app"
+          flutter pub get
+          flutter build apk --release
+    artifacts:
+      - eye_care_app/build/app/outputs/flutter-apk/*.apk
+  aidash_android_eye_care_tab:
+    name: Test APK - eye_care_tab (beta)
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    environment:
+      flutter: stable
+    scripts:
+      - name: Point the app at the beta (never live)
+        script: |
+          cd "eye_care_tab"
+          LIVE_RE=$(printf '%s' "$LIVE_HOST" | sed 's/[.]/\\./g')
+          for f in $(grep -rlE "https?://(www\.)?$LIVE_RE" lib assets 2>/dev/null || true); do
+            perl -pi -e "s#https?://(www\.)?\Q$LIVE_HOST\E(?![\w-]|\.\w)#https://$BETA_HOST#g" "$f"
+            echo "beta address in $f"
+          done
+          if grep -rqE "//(www\.)?$LIVE_RE" lib assets 2>/dev/null; then echo "The live address is still in the app"; exit 1; fi
+      - name: Build the test APK
+        script: |
+          cd "eye_care_tab"
+          flutter pub get
+          flutter build apk --release
+    artifacts:
+      - eye_care_tab/build/app/outputs/flutter-apk/*.apk
