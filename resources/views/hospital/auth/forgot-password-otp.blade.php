@@ -181,6 +181,36 @@
             color: #1A5C3A;
             border-left: 3px solid #27AE60;
         }
+
+        /* Step indicator */
+        .steps { display: flex; align-items: center; justify-content: center; gap: .5rem; margin-bottom: 1.5rem; }
+        .step { display: flex; align-items: center; gap: .4rem; font-size: .75rem; font-weight: 600; color: #9CA3AF; }
+        .step-dot { width: 22px; height: 22px; border-radius: 50%; background: #E5E7EB; color: #6B7280;
+            display: inline-flex; align-items: center; justify-content: center; font-size: .7rem; font-weight: 700; }
+        .step.active { color: #1B4F72; }
+        .step.active .step-dot { background: #1B4F72; color: #fff; }
+        .step.done .step-dot { background: #27AE60; color: #fff; }
+        .step-line { width: 22px; height: 2px; background: #E5E7EB; }
+        .input-icon-wrap { position: relative; }
+        .input-icon-wrap > i { position: absolute; left: .875rem; top: 50%; transform: translateY(-50%); color: #9CA3AF; font-size: .85rem; }
+        .input-icon-wrap .form-input { padding-left: 2.4rem; }
+        .btn-login:disabled { opacity: .7; cursor: not-allowed; }
+        .otp-boxes { display: flex; gap: .5rem; justify-content: space-between; }
+        .otp-box { width: 100%; max-width: 52px; height: 56px; text-align: center; font-size: 1.4rem; font-weight: 700;
+            color: #0D2137; border: 1.5px solid #D1D5DB; border-radius: 10px; outline: none; box-sizing: border-box;
+            transition: border-color .2s, box-shadow .2s; }
+        .otp-box:focus { border-color: #2980B9; box-shadow: 0 0 0 3px rgba(41, 128, 185, .15); }
+        .otp-boxes.is-error .otp-box { border-color: #C0392B; }
+        .otp-hint { background: #EAF4FB; border: 1px dashed #2980B9; border-radius: 10px; padding: .75rem 1rem;
+            margin-bottom: 1.25rem; display: flex; align-items: center; justify-content: space-between; gap: .75rem; }
+        .otp-hint small { display: block; font-size: .7rem; color: #64748B; text-transform: uppercase; letter-spacing: .05em; }
+        .otp-hint strong { font-size: 1.35rem; letter-spacing: .3em; color: #1B4F72; }
+        .otp-fill { border: none; background: #1B4F72; color: #fff; font-size: .75rem; font-weight: 600;
+            padding: .45rem .75rem; border-radius: 6px; cursor: pointer; }
+        .resend-row { text-align: center; margin-top: 1.1rem; font-size: .8125rem; color: #6B7280; }
+        .resend-btn { background: none; border: none; padding: 0; font: inherit; font-weight: 700; color: #2980B9; cursor: pointer; }
+        .resend-btn:disabled { color: #9CA3AF; cursor: not-allowed; }
+        .hint-text { font-size: .75rem; color: #9CA3AF; margin-top: .4rem; }
     </style>
 </head>
 
@@ -198,12 +228,20 @@
 
             <div class="login-card">
                 <div class="login-body">
+                    <div class="steps">
+                        <div class="step done"><span class="step-dot"><i class="fa-solid fa-check" style="font-size:.6rem"></i></span> Email</div>
+                        <span class="step-line"></span>
+                        <div class="step active"><span class="step-dot">2</span> Verify</div>
+                        <span class="step-line"></span>
+                        <div class="step "><span class="step-dot">3</span> Password</div>
+                    </div>
+
                     <div class="login-header">
                         <div class="login-icon">
                             <i class="fa-solid fa-lock"></i>
                         </div>
                         <h1>Verify OTP</h1>
-                        <p>Enter the 6-digit OTP for {{ $email }}</p>
+                        <p>We generated a code for <strong>{{ $email }}</strong></p>
                     </div>
 
                     @if(session('success'))
@@ -221,39 +259,88 @@
                     @endif
 
                     @if($otp)
-                        <div class="alert alert-success" style="justify-content:center;font-size:1.25rem;font-weight:800;letter-spacing:.35em">
-                            {{ $otp }}
+                        <div class="otp-hint">
+                            <div>
+                                <small>Your OTP</small>
+                                <strong>{{ $otp }}</strong>
+                            </div>
+                            <button type="button" class="otp-fill" id="otpFill" data-otp="{{ $otp }}">Auto-fill</button>
                         </div>
                     @endif
 
-                    <form method="POST" action="{{ route('hospital.password.otp.verify', ['slug' => $slug]) }}">
+                    <form method="POST" id="otpForm" action="{{ route('hospital.password.otp.verify', ['slug' => $slug]) }}">
                         @csrf
+                        <input type="hidden" name="otp" id="otp">
                         <div class="form-group">
-                            <label class="form-label" for="otp">OTP</label>
-                            <input type="text" id="otp" name="otp" inputmode="numeric" maxlength="6"
-                                class="form-input @error('otp') is-error @enderror" placeholder="------"
-                                required autofocus autocomplete="one-time-code">
+                            <label class="form-label">Enter 6-digit OTP</label>
+                            <div class="otp-boxes @error('otp') is-error @enderror" id="otpBoxes">
+                                @for($i = 0; $i < 6; $i++)
+                                    <input type="text" class="otp-box" inputmode="numeric" maxlength="1"
+                                        autocomplete="{{ $i === 0 ? 'one-time-code' : 'off' }}"
+                                        aria-label="Digit {{ $i + 1 }}" {{ $i === 0 ? 'autofocus' : '' }}>
+                                @endfor
+                            </div>
                         </div>
-                        <button type="submit" class="btn-login">
+                        <button type="submit" class="btn-login" id="verifyBtn">
                             <i class="fa-solid fa-check"></i> Verify OTP
                         </button>
                     </form>
 
                     <form method="POST" action="{{ route('hospital.password.otp.resend', ['slug' => $slug]) }}"
-                        style="margin-top:.75rem">
+                        class="resend-row">
                         @csrf
-                        <button type="submit" class="btn-login" id="resendBtn" style="background:#64748B" disabled>
-                            <i class="fa-solid fa-rotate-right"></i> <span id="resendLabel">Resend OTP</span>
+                        Didn't get it?
+                        <button type="submit" class="resend-btn" id="resendBtn" disabled>
+                            <span id="resendLabel">Resend OTP</span>
                         </button>
                     </form>
                     <script>
                         (function () {
+                            var boxes = Array.prototype.slice.call(document.querySelectorAll('.otp-box'));
+                            var hidden = document.getElementById('otp');
+                            var form = document.getElementById('otpForm');
+                            function sync() {
+                                hidden.value = boxes.map(function (b) { return b.value; }).join('');
+                                return hidden.value.length === 6;
+                            }
+                            function fill(str) {
+                                str = (str || '').replace(/\D/g, '').slice(0, 6);
+                                boxes.forEach(function (b, i) { b.value = str[i] || ''; });
+                                (boxes[Math.min(str.length, 5)]).focus();
+                                if (sync()) submit();
+                            }
+                            function submit() {
+                                var btn = document.getElementById('verifyBtn');
+                                btn.disabled = true;
+                                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Verifying...';
+                                form.submit();
+                            }
+                            boxes.forEach(function (b, i) {
+                                b.addEventListener('input', function () {
+                                    b.value = b.value.replace(/\D/g, '').slice(-1);
+                                    if (b.value && i < 5) boxes[i + 1].focus();
+                                    if (sync()) submit();
+                                });
+                                b.addEventListener('keydown', function (e) {
+                                    if (e.key === 'Backspace' && !b.value && i > 0) boxes[i - 1].focus();
+                                });
+                                b.addEventListener('paste', function (e) {
+                                    e.preventDefault();
+                                    fill((e.clipboardData || window.clipboardData).getData('text'));
+                                });
+                            });
+                            form.addEventListener('submit', function (e) {
+                                if (!sync()) { e.preventDefault(); boxes[0].focus(); }
+                            });
+                            var fillBtn = document.getElementById('otpFill');
+                            if (fillBtn) fillBtn.addEventListener('click', function () { fill(fillBtn.dataset.otp); });
+
                             var left = {{ (int) $wait }};
                             var btn = document.getElementById('resendBtn');
                             var label = document.getElementById('resendLabel');
                             function tick() {
                                 if (left > 0) {
-                                    label.textContent = 'Resend OTP in ' + left + 's';
+                                    label.textContent = 'Resend in ' + left + 's';
                                     left--;
                                     setTimeout(tick, 1000);
                                 } else {
