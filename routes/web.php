@@ -18,6 +18,7 @@
 use App\Http\Controllers\Auth\SuperAdminAuthController;
 use App\Http\Controllers\Platform\LandingController;
 use App\Http\Controllers\Platform\RegisterController;
+use App\Http\Controllers\Hospital\Auth\PasswordResetController;
 use App\Http\Controllers\Platform\UnifiedLoginController;
 use App\Http\Controllers\Platform\WebhookController;
 use App\Http\Controllers\SuperAdmin\AuditLogController;
@@ -81,6 +82,8 @@ Route::post('/location/create-city', [RegisterController::class, 'createCity'])-
 // Unified Hospital Login — single page for all staff
 Route::get('/login', [UnifiedLoginController::class, 'show'])->name('login');
 Route::post('/login', [UnifiedLoginController::class, 'login'])->name('login.post')->middleware('throttle:10,1');
+Route::get('/forgot-password', [PasswordResetController::class, 'showGlobalForm'])->name('password.request');
+Route::post('/forgot-password', [PasswordResetController::class, 'sendGlobal'])->name('password.email')->middleware('throttle:10,1');
 
 // Razorpay Webhook (CSRF exempt — added in VerifyCsrfToken)
 Route::post('/webhooks/razorpay', [WebhookController::class, 'handle'])

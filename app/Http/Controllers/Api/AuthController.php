@@ -7,12 +7,15 @@ use App\Http\Middleware\AddPermissionsVersionHeader;
 use App\Models\Hospital\HospitalSetting;
 use App\Models\Hospital\HospitalUser;
 use App\Models\Platform\Tenant;
+use App\Services\Auth\HospitalPasswordOtp;
 use App\Services\Auth\PermissionMatrix;
 use App\Services\Auth\PermissionsVersion;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Laravel\Sanctum\PersonalAccessToken;
 
 /**
@@ -69,6 +72,96 @@ class AuthController extends Controller
             ],
             'message' => 'Hospital found.',
         ]);
+    }
+
+    /**
+     * Forgot password step 1 (also used for "resend OTP", 30s apart).
+     * The OTP is returned in the response (not emailed yet).
+     *
+     * POST /api/v1/{slug}/auth/forgot-password   { email }
+     */
+    public function forgotPassword(Request $request, HospitalPasswordOtp $otp): JsonResponse
+    {
+        $request->validate(['email' => ['required', 'email']]);
+
+        $tenant = app('tenant');
+        $email  = trim($request->input('email'));
+
+        if (! $otp->findUser($tenant->id, $email)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No active account found with this email.',
+            ], 404);
+        }
+
+        $wait = $otp->waitSeconds($tenant->id, $email);
+        if ($wait > 0) {
+            return response()->json([
+                'success' => false,
+                'message' => "Please wait {$wait} seconds before requesting a new OTP.",
+                'data'    => ['resend_in' => $wait],
+            ], 429);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'OTP generated.',
+            'data'    => [
+                'otp'       => $otp->issue($tenant->id, $email),
+                'resend_in' => HospitalPasswordOtp::RESEND_SECONDS,
+            ],
+        ]);
+    }
+
+    /**
+     * POST /api/v1/{slug}/auth/verify-otp   { email, otp }  → reset_token
+     */
+    public function verifyPasswordOtp(Request $request, HospitalPasswordOtp $otp): JsonResponse
+    {
+        $request->validate([
+            'email' => ['required', 'email'],
+            'otp'   => ['required', 'digits:6'],
+        ]);
+
+        $user  = $otp->findUser(app('tenant')->id, $request->input('email'));
+        $token = $user ? $otp->verify($user, $request->input('otp')) : null;
+
+        if (! $token) {
+            return response()->json(['success' => false, 'message' => 'Invalid or expired OTP.'], 422);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'OTP verified.',
+            'data'    => ['reset_token' => $token],
+        ]);
+    }
+
+    /**
+     * POST /api/v1/{slug}/auth/reset-password   { email, reset_token, password, password_confirmation }
+     */
+    public function resetPassword(Request $request, HospitalPasswordOtp $otp): JsonResponse
+    {
+        $request->validate([
+            'email'       => ['required', 'email'],
+            'reset_token' => ['required', 'string'],
+            'password'    => ['required', 'string', 'min:8', 'confirmed'],
+        ]);
+
+        $user = $otp->findUser(app('tenant')->id, $request->input('email'));
+        $broker = Password::broker('hospital_users');
+
+        if (! $user || ! $broker->tokenExists($user, $request->input('reset_token'))) {
+            return response()->json(['success' => false, 'message' => 'Reset session expired. Please start again.'], 422);
+        }
+
+        $user->forceFill([
+            'password'       => Hash::make($request->input('password')),
+            'remember_token' => Str::random(60),
+        ])->save();
+        $broker->deleteToken($user);
+
+        return response()->json(['success' => true, 'message' => 'Password reset successfully.']);
     }
 
     /**
