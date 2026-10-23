@@ -10,12 +10,7 @@
 </head>
 
 <body>
-    <div class="rec-page">
-        <div class="rec-wrap">
-            <div class="rec-brand">
-                <a href="{{ route('home') }}"><i class="fa-solid fa-eye"></i><span>EyeHMS</span></a>
-            </div>
-            <div class="rec-card">
+    @include('hospital.auth._recovery-open', ['step' => 3])
                 <div class="rec-top">
                     <a href="{{ route('hospital.login', ['slug' => $slug]) }}" class="rec-back" aria-label="Back to login"><i class="fa-solid fa-arrow-left"></i></a>
                     <span class="rec-step">Step 3 of 3</span>
@@ -47,9 +42,7 @@
                     <button type="submit" class="rec-btn"><i class="fa-solid fa-check"></i> Reset password</button>
                 </form>
                 <div class="rec-foot"><a href="{{ route('hospital.login', ['slug' => $slug]) }}">Back to login</a></div>
-            </div>
-        </div>
-    </div>
+    @include('hospital.auth._recovery-close')
 
     <script>
         (function () {

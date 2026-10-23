@@ -3,15 +3,28 @@
 <style>
     * { box-sizing: border-box; }
     body { margin: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #0D2137; }
-    .rec-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1.5rem;
-        background: linear-gradient(135deg, #EBF5FB 0%, #fff 60%, #EBF5FB 100%); }
-    .rec-wrap { width: 100%; max-width: 420px; }
-    .rec-brand { display: flex; justify-content: center; margin-bottom: 1.25rem; }
-    .rec-brand a { display: inline-flex; align-items: center; gap: .5rem; text-decoration: none; color: #1B4F72;
-        font-size: 1.05rem; font-weight: 800; letter-spacing: -.01em; }
-    .rec-brand i { color: #1ABC9C; font-size: 1.2rem; }
-    .rec-card { background: #fff; border: 1px solid #E5EDF4; border-radius: 20px; padding: 1.75rem 2rem 2rem;
-        box-shadow: 0 20px 50px rgba(27, 79, 114, .10); }
+    html, body { min-height: 100%; background: linear-gradient(135deg, #EBF5FB 0%, #fff 60%, #EBF5FB 100%); }
+    .split-layout { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 28px; }
+    .auth-shell { width: min(1100px, 100%); min-height: 620px; display: grid; grid-template-columns: 1fr 1fr; background: #fff;
+        border: 1.5px solid rgba(41, 128, 185, .12); border-radius: 40px; box-shadow: 0 24px 60px rgba(13, 33, 55, .16); overflow: hidden; }
+    .auth-banner { display: flex; align-items: center; justify-content: center; padding: 44px; border-right: 1px solid rgba(27, 79, 114, .12);
+        background: linear-gradient(180deg, rgba(235, 245, 251, .85) 0%, rgba(255, 255, 255, .96) 100%); }
+    .banner-content { text-align: center; max-width: 360px; }
+    .banner-logo { height: 56px; width: auto; object-fit: contain; margin-bottom: 1.75rem; }
+    .hero-icon { width: 120px; height: 120px; border-radius: 30px; margin: 0 auto 1.5rem; background: #fff; color: #1B4F72; font-size: 3rem;
+        display: flex; align-items: center; justify-content: center; box-shadow: 0 16px 40px rgba(27, 79, 114, .14); }
+    .banner-content h2 { font-size: 1.4rem; font-weight: 800; letter-spacing: -.02em; margin: 0 0 .4rem; color: #0D2137; }
+    .banner-content p { font-size: .9rem; color: #64748B; margin: 0 0 1.5rem; line-height: 1.5; }
+    .banner-steps { list-style: none; margin: 0; padding: 0; text-align: left; display: inline-block; }
+    .banner-steps li { display: flex; align-items: center; gap: .7rem; padding: .4rem 0; font-size: .875rem; color: #94A3B8; font-weight: 500; }
+    .banner-steps li span { width: 24px; height: 24px; border-radius: 50%; background: #E5EDF4; color: #64748B; display: inline-flex;
+        align-items: center; justify-content: center; font-size: .72rem; font-weight: 700; }
+    .banner-steps li.active { color: #0D2137; font-weight: 700; }
+    .banner-steps li.active span { background: #1B4F72; color: #fff; }
+    .banner-steps li.done { color: #374151; }
+    .banner-steps li.done span { background: #27AE60; color: #fff; }
+    .auth-form-side { display: flex; align-items: center; justify-content: center; padding: 44px; background: #fff; }
+    .rec-card { width: 100%; max-width: 400px; }
     .rec-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; min-height: 34px; }
     .rec-back { width: 34px; height: 34px; border-radius: 50%; background: #F1F5F9; color: #475569; display: inline-flex;
         align-items: center; justify-content: center; text-decoration: none; font-size: .8rem; transition: background .15s; }
@@ -62,8 +75,13 @@
     .rec-foot { text-align: center; margin-top: 1.25rem; font-size: .8125rem; }
     .rec-foot a { color: #64748B; text-decoration: none; }
     .rec-foot a:hover { color: #1B4F72; }
+    @media (max-width: 900px) {
+        .auth-shell { grid-template-columns: 1fr; min-height: auto; border-radius: 28px; }
+        .auth-banner { display: none; }
+        .auth-form-side { padding: 32px 22px; }
+    }
     @media (max-width: 480px) {
-        .rec-card { padding: 1.5rem 1.25rem 1.75rem; border-radius: 16px; }
+        .split-layout { padding: 14px; }
         .otp-boxes { gap: .35rem; }
         .otp-box { height: 48px; font-size: 1.15rem; }
     }
