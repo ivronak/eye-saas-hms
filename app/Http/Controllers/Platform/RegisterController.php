@@ -103,7 +103,7 @@ class RegisterController extends Controller
                 'regex:/^[a-z0-9\-]+$/',
                 'unique:tenants,slug',
                 function (string $attribute, mixed $value, \Closure $fail): void {
-                    $reserved = ['superadmin', 'admin', 'register', 'login', 'pricing', 'api', 'health', 'webhook'];
+                    $reserved = ['superadmin', 'admin', 'register', 'login', 'pricing', 'contact', 'api', 'health', 'webhook'];
                     if (in_array(strtolower($value), $reserved)) {
                         $fail('This URL slug is reserved and cannot be used.');
                     }
@@ -316,7 +316,7 @@ class RegisterController extends Controller
             return response()->json(['available' => false, 'message' => 'Minimum 3 characters']);
         }
 
-        $reserved = ['superadmin', 'admin', 'register', 'login', 'pricing', 'api', 'health', 'webhook'];
+        $reserved = ['superadmin', 'admin', 'register', 'login', 'pricing', 'contact', 'api', 'health', 'webhook'];
         if (in_array($slug, $reserved)) {
             return response()->json(['available' => false, 'message' => 'This slug is reserved']);
         }

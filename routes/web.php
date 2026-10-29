@@ -16,11 +16,13 @@
  */
 
 use App\Http\Controllers\Auth\SuperAdminAuthController;
+use App\Http\Controllers\Platform\ContactController;
 use App\Http\Controllers\Platform\LandingController;
 use App\Http\Controllers\Platform\RegisterController;
 use App\Http\Controllers\Platform\UnifiedLoginController;
 use App\Http\Controllers\Platform\WebhookController;
 use App\Http\Controllers\SuperAdmin\AuditLogController;
+use App\Http\Controllers\SuperAdmin\ContactInquiryController;
 use App\Http\Controllers\SuperAdmin\NotificationController;
 use App\Http\Controllers\SuperAdmin\PaymentController;
 use App\Http\Controllers\SuperAdmin\PlanController;
@@ -50,6 +52,10 @@ Route::get('/', [LandingController::class, 'index'])->name('home');
 
 // Pricing page
 Route::get('/pricing', [LandingController::class, 'pricing'])->name('pricing');
+
+// Contact us (public form → Super Admin "Contact Inquiries")
+Route::get('/contact', [ContactController::class, 'show'])->name('contact.show');
+Route::post('/contact', [ContactController::class, 'store'])->name('contact.store')->middleware('throttle:5,1');
 
 // Hospital registration
 Route::get('/register', [RegisterController::class, 'show'])->name('register.show');
@@ -135,6 +141,21 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
         // Audit Logs
         Route::get('/audit-logs', [AuditLogController::class, 'index'])
             ->name('audit-logs.index');
+
+        // Contact Inquiries (public Contact us form submissions)
+        Route::get('/contact-inquiries', [ContactInquiryController::class, 'index'])
+            ->name('contact-inquiries.index');
+        Route::post('/contact-inquiries/mark-all-read', [ContactInquiryController::class, 'markAllRead'])
+            ->name('contact-inquiries.mark-all-read');
+        Route::get('/contact-inquiries/{inquiry}', [ContactInquiryController::class, 'show'])
+            ->whereNumber('inquiry')
+            ->name('contact-inquiries.show');
+        Route::put('/contact-inquiries/{inquiry}', [ContactInquiryController::class, 'update'])
+            ->whereNumber('inquiry')
+            ->name('contact-inquiries.update');
+        Route::delete('/contact-inquiries/{inquiry}', [ContactInquiryController::class, 'destroy'])
+            ->whereNumber('inquiry')
+            ->name('contact-inquiries.destroy');
 
         // Notification Center
         Route::get('/notifications', [NotificationController::class, 'index'])

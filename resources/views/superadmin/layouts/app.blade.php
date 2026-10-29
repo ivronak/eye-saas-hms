@@ -100,12 +100,12 @@
             </a>
 
             <div class="hms-nav-divider"></div>
-            <div class="hms-nav-group-toggle {{ request()->routeIs('superadmin.hospitals.*', 'superadmin.plans.*', 'superadmin.subscriptions.*', 'superadmin.payments.*', 'superadmin.audit-logs.*', 'superadmin.notifications.*') ? '' : 'collapsed' }}"
+            <div class="hms-nav-group-toggle {{ request()->routeIs('superadmin.hospitals.*', 'superadmin.plans.*', 'superadmin.subscriptions.*', 'superadmin.payments.*', 'superadmin.audit-logs.*', 'superadmin.notifications.*', 'superadmin.contact-inquiries.*') ? '' : 'collapsed' }}"
                 data-target="sa-nav-management">
                 <span class="hms-nav-section-label" style="padding:0;margin:0">Management</span>
                 <i class="bi bi-chevron-down hms-nav-chevron"></i>
             </div>
-            <div class="hms-nav-group-items {{ request()->routeIs('superadmin.hospitals.*', 'superadmin.plans.*', 'superadmin.subscriptions.*', 'superadmin.payments.*', 'superadmin.audit-logs.*', 'superadmin.notifications.*') ? '' : 'collapsed' }}"
+            <div class="hms-nav-group-items {{ request()->routeIs('superadmin.hospitals.*', 'superadmin.plans.*', 'superadmin.subscriptions.*', 'superadmin.payments.*', 'superadmin.audit-logs.*', 'superadmin.notifications.*', 'superadmin.contact-inquiries.*') ? '' : 'collapsed' }}"
                 id="sa-nav-management">
                 <a href="{{ route('superadmin.hospitals.index') }}"
                     class="hms-nav-item {{ request()->routeIs('superadmin.hospitals.*') && request('status') !== 'pending' ? 'active' : '' }}">
@@ -146,6 +146,16 @@
                     class="hms-nav-item {{ request()->routeIs('superadmin.notifications.*') ? 'active' : '' }}">
                     <i class="bi bi-bell-fill"></i>
                     <span>Notifications</span>
+                </a>
+                <a href="{{ route('superadmin.contact-inquiries.index') }}"
+                    class="hms-nav-item {{ request()->routeIs('superadmin.contact-inquiries.*') ? 'active' : '' }}">
+                    <i class="bi bi-envelope-paper-fill"></i>
+                    <span>Contact Inquiries</span>
+                    @php $saContactNew = \App\Models\Platform\ContactInquiry::unreadCount(); @endphp
+                    @if($saContactNew > 0)
+                        <span
+                            style="margin-left:auto;background:#0f4f86;color:#fff;font-size:.65rem;font-weight:700;padding:.1rem .4rem;border-radius:999px">{{ $saContactNew }}</span>
+                    @endif
                 </a>
             </div>
 

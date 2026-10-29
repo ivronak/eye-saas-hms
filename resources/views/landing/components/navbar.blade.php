@@ -20,6 +20,8 @@
                 <a href="{{ route('pricing') }}" data-nav="pricing"
                     class="{{ request()->routeIs('pricing') ? 'is-on' : '' }}">Pricing</a>
                 <a href="{{ route('home') }}#faq" data-nav="faq">FAQ</a>
+                <a href="{{ route('contact.show') }}" data-nav="contact"
+                    class="{{ request()->routeIs('contact.*') ? 'is-on' : '' }}">Contact</a>
                 <a href="{{ route('login') }}" class="ecrm-nav-mobile-only">Login</a>
                 <a href="{{ route('register.show') }}" class="ecrm-nav-mobile-only">Free trial</a>
             </nav>
