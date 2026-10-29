@@ -74,7 +74,7 @@ class PlatformHospitalApiController extends Controller
                 'required', 'string', 'min:3', 'max:30', 'regex:/^[a-z0-9\-]+$/',
                 'unique:tenants,slug',
                 function (string $attribute, mixed $value, \Closure $fail): void {
-                    $reserved = ['superadmin', 'admin', 'register', 'login', 'pricing', 'api', 'health', 'webhook'];
+                    $reserved = ['superadmin', 'admin', 'register', 'login', 'pricing', 'contact', 'api', 'health', 'webhook'];
                     if (in_array(strtolower((string) $value), $reserved, true)) {
                         $fail('This slug is reserved.');
                     }
@@ -139,7 +139,7 @@ class PlatformHospitalApiController extends Controller
                 'required', 'string', 'min:3', 'max:30', 'regex:/^[a-z0-9\-]+$/',
                 'unique:tenants,slug,' . $tenant->id,
                 function (string $attribute, mixed $value, \Closure $fail): void {
-                    $reserved = ['superadmin', 'admin', 'register', 'login', 'pricing', 'api', 'health', 'webhook'];
+                    $reserved = ['superadmin', 'admin', 'register', 'login', 'pricing', 'contact', 'api', 'health', 'webhook'];
                     if (in_array(strtolower((string) $value), $reserved, true)) {
                         $fail('This slug is reserved.');
                     }
