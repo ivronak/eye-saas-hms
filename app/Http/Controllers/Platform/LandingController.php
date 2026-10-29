@@ -45,4 +45,12 @@ class LandingController extends Controller
 
         return view('landing.pricing', compact('pricing'));
     }
+
+    /**
+     * privacyPolicy() — Standalone privacy policy page
+     */
+    public function privacyPolicy(): View
+    {
+        return view('landing.privacy-policy');
+    }
 }

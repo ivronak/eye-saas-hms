@@ -1,0 +1,131 @@
+/**
+ * EYENOSIS legal pages (Privacy Policy, Terms, etc.) — scoped .ecrm-legal-*
+ * Uses tokens from eye-crm-landing.css.
+ */
+
+.ecrm-legal-section {
+    padding-top: 1rem;
+}
+
+.ecrm-legal-shell {
+    display: grid;
+    grid-template-columns: 240px minmax(0, 1fr);
+    gap: 2.5rem;
+    align-items: start;
+    max-width: 980px;
+    margin-inline: auto;
+}
+
+/* Table of contents */
+.ecrm-legal-toc {
+    position: sticky;
+    top: calc(var(--ecrm-mast-h) + 1.5rem);
+    padding: 1.25rem 1.1rem;
+    border-radius: 16px;
+    background: #fff;
+    border: 1px solid rgba(26, 111, 181, 0.1);
+    box-shadow: var(--ecrm-shadow-soft);
+}
+.ecrm-legal-toc-label {
+    display: block;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ecrm-teal);
+    margin-bottom: 0.75rem;
+}
+.ecrm-legal-toc nav {
+    display: grid;
+    gap: 0.15rem;
+}
+.ecrm-legal-toc a {
+    display: block;
+    padding: 0.4rem 0.55rem;
+    border-radius: 9px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--ecrm-muted);
+    line-height: 1.35;
+    transition: background 0.18s ease, color 0.18s ease;
+}
+.ecrm-legal-toc a:hover {
+    background: var(--ecrm-mist);
+    color: var(--ecrm-blue);
+}
+
+/* Prose body */
+.ecrm-legal-body {
+    background: #fff;
+    border: 1px solid rgba(26, 111, 181, 0.1);
+    border-radius: 20px;
+    padding: clamp(1.5rem, 3vw, 2.75rem);
+    box-shadow: var(--ecrm-shadow-soft);
+    color: var(--ecrm-ink);
+    line-height: 1.75;
+}
+.ecrm-legal-body h2 {
+    font-family: var(--ecrm-display);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--ecrm-navy);
+    font-size: clamp(1.15rem, 2vw, 1.4rem);
+    margin: 2.1rem 0 0.85rem;
+    scroll-margin-top: calc(var(--ecrm-mast-h) + 1rem);
+}
+.ecrm-legal-body h2:first-child {
+    margin-top: 0;
+}
+.ecrm-legal-body p {
+    margin: 0 0 1rem;
+    color: var(--ecrm-ink);
+    font-size: 0.98rem;
+}
+.ecrm-legal-body ul {
+    margin: 0 0 1rem;
+    padding-left: 1.1rem;
+    display: grid;
+    gap: 0.5rem;
+}
+.ecrm-legal-body li {
+    font-size: 0.98rem;
+    line-height: 1.65;
+}
+.ecrm-legal-body strong {
+    color: var(--ecrm-navy);
+}
+.ecrm-legal-body a {
+    color: var(--ecrm-blue);
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+.ecrm-legal-body a:hover {
+    color: var(--ecrm-blue-deep);
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 900px) {
+    .ecrm-legal-shell {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 1.25rem;
+    }
+    .ecrm-legal-toc {
+        position: static;
+        padding: 1rem 1.1rem;
+    }
+    .ecrm-legal-toc nav {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.15rem 0.5rem;
+    }
+}
+@media (max-width: 560px) {
+    .ecrm-legal-toc nav {
+        grid-template-columns: minmax(0, 1fr);
+    }
+    .ecrm-legal-body {
+        padding: 1.25rem;
+        border-radius: 16px;
+    }
+}
