@@ -23,7 +23,6 @@
                         <li><a href="{{ route('home') }}#workflow">Workflow</a></li>
                         <li><a href="{{ route('pricing') }}">Pricing</a></li>
                         <li><a href="{{ route('register.show') }}">Free trial</a></li>
-                        <li><a href="{{ route('contact.show') }}">Contact us</a></li>
                     </ul>
                 </div>
                 <div class="ecrm-footer-col">
@@ -33,7 +32,6 @@
                         <li><a href="{{ route('register.show') }}">Register hospital</a></li>
                         <li><a href="{{ route('superadmin.login') }}">Platform admin</a></li>
                         <li><a href="{{ route('home') }}#faq">FAQ</a></li>
-                        <li><a href="{{ route('contact.show') }}">Contact</a></li>
                     </ul>
                 </div>
                 <div class="ecrm-footer-col">
@@ -57,7 +55,7 @@
                 <div class="ecrm-footer-links">
                     <a href="{{ route('home') }}">Home</a>
                     <a href="{{ route('pricing') }}">Pricing</a>
-                    <a href="{{ route('contact.show') }}">Contact</a>
+                    <a href="{{ route('privacy-policy') }}">Privacy Policy</a>
                 </div>
             </div>
         </div>
