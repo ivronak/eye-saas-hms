@@ -1,0 +1,19 @@
+Options -Indexes
+
+# Stop Laravel parent .htaccess from rewriting this folder to index.php
+<IfModule mod_rewrite.c>
+    RewriteEngine Off
+</IfModule>
+
+# Pass Authorization to PHP on CGI/FastCGI
+<IfModule mod_setenvif.c>
+    SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1
+</IfModule>
+
+<Files "config.php">
+    Require all denied
+</Files>
+
+<Files "config.sample.php">
+    Require all denied
+</Files>

@@ -1,0 +1,16 @@
+IV Backup Agent
+================
+
+1) Extract folder on server (iv-backup-agent only)
+2) agent.php + config.php present check
+3) Panel Agent URL: https://yoursite.com/iv-backup-agent/agent.php
+   Laravel host 404 aave to: .../iv-backup-agent/index.php (same folder)
+4) Run now
+
+Label: COMMON (5 projects)
+Generated: 2026-08-08 10:48:50
+
+COMMON AGENT — ek j folder server par upload.
+Badha projects ma SAME Agent URL muko.
+Projects: Demo Shop, eyecare, goldsilver, ikon events, Landing React
+Navo project add thay to aa Common Agent farithi download kari overwrite karo.
