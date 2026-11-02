@@ -50,7 +50,9 @@ return [
     |
     */
 
-    'expiration' => null,
+    // Counted from token creation (not idle time). Mobile/tablet apps handle the
+    // resulting 401 by returning to the login screen. Default 60 days.
+    'expiration' => (int) env('SANCTUM_TOKEN_EXPIRATION_MINUTES', 60 * 24 * 60),
 
     /*
     |--------------------------------------------------------------------------

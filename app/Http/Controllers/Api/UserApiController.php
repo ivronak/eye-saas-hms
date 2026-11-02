@@ -301,6 +301,11 @@ class UserApiController extends Controller
             $user->password = $validated['password'];
             $user->original_password = $validated['password'];
             $user->save();
+
+            // Password changed by an admin → sign that user out of their devices
+            // (an admin editing their own password keeps the current session).
+            $keepTokenId = $user->is($request->user()) ? $request->user()->currentAccessToken()?->id : null;
+            $user->tokens()->where('id', '!=', $keepTokenId ?? 0)->delete();
         }
 
         $user->load(['role.grantedPermissions', 'defaultOtAssistant:id,name']);

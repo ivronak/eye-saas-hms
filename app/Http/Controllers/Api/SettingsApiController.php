@@ -257,6 +257,9 @@ class SettingsApiController extends Controller
         $user->password = $validated['new_password'];
         $user->save();
 
+        // Sign out every other device; keep this one logged in.
+        $user->tokens()->where('id', '!=', $user->currentAccessToken()?->id)->delete();
+
         return response()->json(['success' => true, 'message' => 'Password changed successfully.']);
     }
 

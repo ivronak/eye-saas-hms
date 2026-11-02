@@ -9,9 +9,11 @@ use App\Models\Hospital\HospitalUser;
 use App\Models\Platform\Tenant;
 use App\Services\Auth\PermissionMatrix;
 use App\Services\Auth\PermissionsVersion;
+use App\Services\Platform\MailConfigService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\PersonalAccessToken;
 
@@ -69,6 +71,85 @@ class AuthController extends Controller
             ],
             'message' => 'Hospital found.',
         ]);
+    }
+
+    /**
+     * Forgot password — same flow as the web /forgot-password page: the
+     * 'hospital_users' broker e-mails a reset link (opens the web reset page,
+     * where the new password is set). Accepts the login the app already asks
+     * for (email OR phone) and resolves it to the account's e-mail.
+     *
+     * POST /api/v1/forgot-password   body: { login }
+     */
+    public function forgotPassword(Request $request): JsonResponse
+    {
+        $request->validate(['login' => 'required|string|max:190']);
+
+        $login             = trim($request->input('login'));
+        $normalizedContact = preg_replace('/\D+/', '', $login) ?? '';
+
+        $user = HospitalUser::withoutTenantScope()
+            ->where(function ($query) use ($login, $normalizedContact) {
+                $query->where('email', $login)
+                      ->orWhere('contact', $login);
+                if ($normalizedContact !== '' && $normalizedContact !== $login) {
+                    $query->orWhere('contact', $normalizedContact);
+                }
+            })
+            ->where('status', 'active')
+            ->whereNull('deleted_at')
+            ->first();
+
+        if (! $user || ! $user->email) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No account found for this email or phone number.',
+            ], 404);
+        }
+
+        if (! MailConfigService::apply()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Email is not configured. Please contact support.',
+            ], 503);
+        }
+
+        try {
+            $status = Password::broker('hospital_users')->sendResetLink(['email' => $user->email]);
+        } catch (\Throwable) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Could not send reset email. Please try again or contact support.',
+            ], 500);
+        }
+
+        if ($status === Password::RESET_THROTTLED) {
+            return response()->json([
+                'success' => false,
+                'message' => 'A reset link was just sent. Please wait a minute before requesting another.',
+            ], 429);
+        }
+
+        if ($status !== Password::RESET_LINK_SENT) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Could not send reset email. Please try again or contact support.',
+            ], 422);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data'    => ['email' => $this->maskEmail($user->email)],
+            'message' => 'Password reset link sent.',
+        ]);
+    }
+
+    private function maskEmail(string $email): string
+    {
+        [$name, $domain] = array_pad(explode('@', $email, 2), 2, '');
+        $visible = mb_substr($name, 0, min(2, max(1, mb_strlen($name) - 1)));
+
+        return $visible.str_repeat('*', max(2, mb_strlen($name) - mb_strlen($visible))).'@'.$domain;
     }
 
     /**
