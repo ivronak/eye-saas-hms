@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Hospital\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Services\Platform\MailConfigService;
 use App\Support\EmailRules;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -35,9 +36,21 @@ class PasswordResetController extends Controller
             'email' => EmailRules::required(),
         ], EmailRules::messages('email'));
 
-        $status = Password::broker('hospital_users')->sendResetLink(
-            $request->only('email')
-        );
+        if (! MailConfigService::apply()) {
+            return back()
+                ->withErrors(['email' => 'Email is not configured. Please contact support.'])
+                ->withInput();
+        }
+
+        try {
+            $status = Password::broker('hospital_users')->sendResetLink(
+                $request->only('email')
+            );
+        } catch (\Throwable) {
+            return back()
+                ->withErrors(['email' => 'Could not send reset email. Please try again or contact support.'])
+                ->withInput();
+        }
 
         return $status === Password::RESET_LINK_SENT
             ? back()->with('success', __($status))

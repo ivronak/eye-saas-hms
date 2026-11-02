@@ -860,6 +860,7 @@
                         <div class="form-group">
                             <div class="row-between">
                                 <label class="form-label" for="password" style="margin-bottom:0">Password</label>
+                                <a href="{{ route('hospital.password.request', ['slug' => $slug]) }}" class="forgot-link">Forgot Password?</a>
                             </div>
                             <div class="input-wrap">
                                 <i class="fa-solid fa-lock input-icon"></i>

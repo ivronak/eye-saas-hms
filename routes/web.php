@@ -20,6 +20,7 @@ use App\Http\Controllers\Platform\ContactController;
 use App\Http\Controllers\Platform\LandingController;
 use App\Http\Controllers\Platform\RegisterController;
 use App\Http\Controllers\Platform\UnifiedLoginController;
+use App\Http\Controllers\Platform\UnifiedPasswordResetController;
 use App\Http\Controllers\Platform\WebhookController;
 use App\Http\Controllers\SuperAdmin\AuditLogController;
 use App\Http\Controllers\SuperAdmin\ContactInquiryController;
@@ -90,6 +91,10 @@ Route::post('/location/create-city', [RegisterController::class, 'createCity'])-
 // Unified Hospital Login — single page for all staff
 Route::get('/login', [UnifiedLoginController::class, 'show'])->name('login');
 Route::post('/login', [UnifiedLoginController::class, 'login'])->name('login.post')->middleware('throttle:10,1');
+Route::get('/forgot-password', [UnifiedPasswordResetController::class, 'showForgotForm'])->name('password.request');
+Route::post('/forgot-password', [UnifiedPasswordResetController::class, 'sendResetLink'])->name('password.email')->middleware('throttle:5,1');
+Route::get('/reset-password/{token}', [UnifiedPasswordResetController::class, 'showResetForm'])->name('password.reset');
+Route::post('/reset-password', [UnifiedPasswordResetController::class, 'resetPassword'])->name('password.update')->middleware('throttle:5,1');
 
 // Razorpay Webhook (CSRF exempt — added in VerifyCsrfToken)
 Route::post('/webhooks/razorpay', [WebhookController::class, 'handle'])

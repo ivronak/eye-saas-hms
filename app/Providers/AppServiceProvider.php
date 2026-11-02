@@ -35,6 +35,11 @@ class AppServiceProvider extends ServiceProvider
             URL::forceScheme('https');
         }
 
+        $appUrl = rtrim((string) config('app.url'), '/');
+        if ($appUrl !== '') {
+            URL::forceRootUrl($appUrl);
+        }
+
         // @haspermission('patient_view') ... @endhaspermission
         Blade::if('haspermission', function (string $permissionKey): bool {
             return hospital_can($permissionKey);

@@ -213,7 +213,7 @@
                         </div>
                     @endif
 
-                    <form method="POST" action="{{ route('hospital.password.update', ['slug' => $slug]) }}">
+                    <form method="POST" action="{{ $formAction ?? route('hospital.password.update', ['slug' => $slug]) }}">
                         @csrf
 
                         <input type="hidden" name="token" value="{{ $token }}">
@@ -249,7 +249,7 @@
                     </form>
 
                     <div class="login-footer">
-                        <a href="{{ route('hospital.login', ['slug' => $slug]) }}">
+                        <a href="{{ $loginUrl ?? route('hospital.login', ['slug' => $slug]) }}">
                             <i class="fa-solid fa-arrow-left"></i> Back to Login
                         </a>
                     </div>

@@ -38,10 +38,8 @@
                                 <tr>
                                     <td
                                         style="background:#1B4F72;border-radius:8px;padding:14px 32px;text-align:center">
-                                        <a href="{{ $url }}"
-                                            style="color:#FFFFFF;text-decoration:none;font-size:15px;font-weight:700;display:inline-block">
-                                            Reset Password
-                                        </a>
+                                        <a href="{{ $url }}" target="_blank" rel="noopener noreferrer"
+                                            style="color:#FFFFFF;text-decoration:none;font-size:15px;font-weight:700;display:inline-block">Reset Password</a>
                                     </td>
                                 </tr>
                             </table>
@@ -54,10 +52,9 @@
                             </p>
 
                             <hr style="border:none;border-top:1px solid #E5E7EB;margin:20px 0">
-                            <p style="margin:0;color:#9CA3AF;font-size:12px;line-height:1.6">
-                                If you're having trouble clicking the button, copy and paste the URL below into your
-                                browser:<br>
-                                <a href="{{ $url }}" style="color:#2980B9;word-break:break-all">{{ $url }}</a>
+                            <p style="margin:0;color:#9CA3AF;font-size:12px;line-height:1.6;word-break:break-all">
+                                If the button does not open, copy this link into your browser:<br>
+                                {{ $url }}
                             </p>
                         </td>
                     </tr>
