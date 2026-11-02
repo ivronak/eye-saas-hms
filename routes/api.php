@@ -83,7 +83,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
     Route::prefix('super')->name('super.')->group(function () {
 
         // Public — no token required
-        Route::post('/auth/login', [PlatformAuthController::class, 'login'])->name('auth.login');
+        Route::post('/auth/login', [PlatformAuthController::class, 'login'])->middleware('throttle:10,1')->name('auth.login');
 
         // Protected — valid PlatformAdmin token required
         Route::middleware(['auth:platform_api', 'platform.admin'])->group(function () {
@@ -211,7 +211,12 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
     // ----------------------------------------------------------------
     // Public — no slug, no auth needed
     // ----------------------------------------------------------------
-    Route::get('/find-hospital', [AuthController::class, 'findHospital'])->name('find.hospital');
+    // Limits are per IP; a hospital's staff often share one Wi-Fi IP, so they are
+    // generous enough for a shift start but still stop scripted guessing.
+    Route::get('/find-hospital', [AuthController::class, 'findHospital'])->middleware('throttle:30,1')->name('find.hospital');
+    Route::post('/forgot-password', [AuthController::class, 'forgotPassword'])
+        ->middleware('throttle:5,1')
+        ->name('forgot.password');
 
     // ----------------------------------------------------------------
     // Hospital Tenant API (Slug se tenant identify hoga)
@@ -222,7 +227,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         ->group(function () {
 
             // Auth — no token required
-            Route::post('/auth/login', [AuthController::class, 'login'])->name('auth.login');
+            Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:10,1')->name('auth.login');
             Route::post('/auth/logout', [AuthController::class, 'logout'])
                 ->middleware('auth:sanctum')
                 ->name('auth.logout');

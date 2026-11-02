@@ -249,7 +249,9 @@ class HospitalUserController extends Controller
 
         $user->update($updateData);
 
-        if ($user->status === 'inactive') {
+        // Inactive, or password changed by an admin → revoke the user's
+        // mobile/tablet tokens so those devices get 401 and return to login.
+        if ($user->status === 'inactive' || !empty($data['password'])) {
             $user->tokens()->delete();
         }
 

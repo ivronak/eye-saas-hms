@@ -89,6 +89,12 @@ class DoctorProfileController extends Controller
 
         $user->update($updateData);
 
+        // Password changed here → sign the mobile/tablet apps out (their
+        // Sanctum tokens); this web session stays logged in.
+        if (isset($updateData['password'])) {
+            $user->tokens()->delete();
+        }
+
         return redirect()
             ->route('hospital.dashboard', ['slug' => $slug])
             ->with('success', 'Profile updated successfully.');

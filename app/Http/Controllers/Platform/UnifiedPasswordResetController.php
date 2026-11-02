@@ -80,6 +80,9 @@ class UnifiedPasswordResetController extends Controller
                     'password' => $password,
                     'remember_token' => Str::random(60),
                 ])->save();
+
+                // Sign every mobile/tablet device out; they must use the new password.
+                $user->tokens()->delete();
             }
         );
 

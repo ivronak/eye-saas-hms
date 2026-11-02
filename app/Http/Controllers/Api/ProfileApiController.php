@@ -88,6 +88,11 @@ class ProfileApiController extends Controller
 
         $user->update($updateData);
 
+        // Password changed → sign out every other device; keep this one logged in.
+        if (isset($updateData['password'])) {
+            $user->tokens()->where('id', '!=', $user->currentAccessToken()?->id)->delete();
+        }
+
         return response()->json([
             'success' => true,
             'data'    => $this->formatProfile($user->fresh()->loadMissing('role'), $isDoctor),
