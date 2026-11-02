@@ -222,6 +222,9 @@ class HospitalSettingController extends Controller
             }
             $user->password = $request->new_password;
             $user->save();
+
+            // Sign out the mobile/tablet apps; this web session stays logged in.
+            $user->tokens()->delete();
         }
 
         return redirect()->route('hospital.dashboard', ['slug' => $slug])

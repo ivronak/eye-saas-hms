@@ -64,6 +64,9 @@ class ProfileController extends Controller
 
         $admin->update(['password' => Hash::make($request->password)]);
 
+        // Sign out the platform mobile app; this web session stays logged in.
+        $admin->tokens()->delete();
+
         return back()->with('success', 'Password changed successfully.');
     }
 }

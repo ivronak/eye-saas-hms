@@ -60,6 +60,9 @@ class PlatformProfileApiController extends Controller
 
         $admin->update(['password' => $request->password]);
 
+        // Sign out every other device; keep this one logged in.
+        $admin->tokens()->where('id', '!=', $admin->currentAccessToken()?->id)->delete();
+
         return response()->json(['success' => true, 'message' => 'Password changed successfully.']);
     }
 
