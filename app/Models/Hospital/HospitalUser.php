@@ -106,17 +106,15 @@ class HospitalUser extends Authenticatable
      */
     public function sendPasswordResetNotification($token): void
     {
-        $slug = $this->tenant?->slug ?? request()->route('slug');
-        $url = route('hospital.password.reset', [
-            'slug' => $slug,
-            'token' => $token,
-        ]).'?email='.urlencode($this->email);
+        $url = url('/reset-password/'.$token).'?email='.urlencode((string) $this->email);
 
-        MailConfigService::apply();
+        if (! MailConfigService::apply()) {
+            throw new \RuntimeException('SMTP is not configured.');
+        }
 
         Mail::send('emails.hospital-reset-password', ['url' => $url], function ($message) {
             $message->to($this->email, $this->name)
-                ->subject('Reset Your Password â€” '.config('app.name'));
+                ->subject('Reset Your Password — '.config('app.name'));
         });
     }
 

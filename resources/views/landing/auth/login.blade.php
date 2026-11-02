@@ -870,10 +870,8 @@
                             <div
                                 style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.2rem;">
                                 <label class="form-label" for="password" style="margin:0">Password</label>
-                                @if (Route::has('password.request'))
-                                    <a href="{{ route('password.request') }}" class="forgot-link"
-                                        style="font-size:.85rem;color:#2980B9;text-decoration:none;">Forgot Password?</a>
-                                @endif
+                                <a href="{{ route('password.request') }}" class="forgot-link"
+                                    style="font-size:.85rem;color:#2980B9;text-decoration:none;">Forgot Password?</a>
                             </div>
                             <div class="input-wrap password-field-wrap">
                                 <i class="fa-solid fa-lock input-icon"></i>

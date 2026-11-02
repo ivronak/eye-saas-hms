@@ -92,7 +92,7 @@ Route::prefix('{slug}')
         // Forgot / Reset Password — no hospital auth required
         // ================================================================
         Route::get('/forgot-password', [PasswordResetController::class, 'showForgotForm'])->name('password.request');
-        Route::post('/forgot-password', [PasswordResetController::class, 'sendResetLink'])->name('password.email');
+        Route::post('/forgot-password', [PasswordResetController::class, 'sendResetLink'])->name('password.email')->middleware('throttle:5,1');
         Route::get('/reset-password/{token}', [PasswordResetController::class, 'showResetForm'])->name('password.reset');
         Route::post('/reset-password', [PasswordResetController::class, 'resetPassword'])->name('password.update');
 
