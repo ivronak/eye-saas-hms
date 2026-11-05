@@ -194,7 +194,6 @@ class _UsersScreenState extends State<UsersScreen> {
     await showPaneDialog<void>(
       context,
       wide: true,
-      barrierDismissible: false,
       builder: (dCtx) => UserFormPane(
         key: const ValueKey('user_form_add'),
         mode: UserFormMode.add,
@@ -208,7 +207,6 @@ class _UsersScreenState extends State<UsersScreen> {
     await showPaneDialog<void>(
       context,
       wide: true,
-      barrierDismissible: false,
       builder: (dCtx) => UserFormPane(
         key: ValueKey('user_form_edit_${u.id}'),
         mode: UserFormMode.edit,

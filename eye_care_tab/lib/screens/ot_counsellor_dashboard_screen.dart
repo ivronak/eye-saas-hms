@@ -98,7 +98,6 @@ Future<void> openOtCounsellingForm(BuildContext context, OtBookingSummary item, 
   return showPaneDialog<void>(
     context,
     wide: true,
-    barrierDismissible: false,
     builder: (dCtx) => _CounsellingFormPane(
       key: ValueKey('counselling-${item.id}'),
       bookingId: item.id,
@@ -800,17 +799,12 @@ class _CounsellingFormPaneState extends State<_CounsellingFormPane> {
   @override
   Widget build(BuildContext context) {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Row(children: [
-        IconButton(icon: Icon(Icons.close_rounded, color: AppColors.primary), onPressed: widget.onCancel, tooltip: 'Close'),
-        Container(width: 40, height: 40, decoration: BoxDecoration(gradient: LinearGradient(colors: [AppColors.primary, AppColors.blueLight], begin: Alignment.topLeft, end: Alignment.bottomRight), borderRadius: BorderRadius.circular(AppRadius.md)), child: const Icon(Icons.support_agent_rounded, color: Colors.white, size: 20)),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text('Counselling', style: TextStyle(color: AppColors.primary, fontSize: 17, fontWeight: FontWeight.w800)),
-            Text(widget.patientName, style: const TextStyle(color: AppColors.textSecondary, fontSize: 11)),
-          ]),
-        ),
-      ]),
+      AppPaneHeader(
+        icon: Icons.support_agent_rounded,
+        title: 'Counselling',
+        subtitle: widget.patientName,
+        onClose: widget.onCancel,
+      ),
       const SizedBox(height: 16),
       Expanded(
         child: _loading

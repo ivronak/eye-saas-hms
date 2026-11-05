@@ -15,7 +15,7 @@ import '../widgets/skeleton.dart';
 /// in the same sheet as Patient History: filled clinical data first, with
 /// Full exam on the side.
 Future<void> showLatestExamView(BuildContext context, Patient patient) {
-  return showDialog<void>(
+  return showAppDialog<void>(
     context: context,
     useRootNavigator: true,
     builder: (ctx) => LatestExamViewScreen(patient: patient),

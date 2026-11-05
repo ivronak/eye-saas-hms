@@ -14,7 +14,7 @@ import '../widgets/skeleton.dart';
 import '../utils/app_date_picker.dart';
 
 /// Web pull 2026-10-13 — `OtReportController::lensReport()`. A dedicated
-/// page (summary cards + lens-power breakdown), not the generic
+/// page (lens-power breakdown table, web pull 2026-10-17), not the generic
 /// headings/rows `OtReportViewerScreen` the rest of the OT Reports
 /// catalogue uses. Default date range is today-today (web's
 /// `resolveLensReportDateRange()`), not the generic reports' start-of-month.
@@ -140,31 +140,6 @@ class _OtLensReportScreenState extends State<OtLensReportScreen> {
     );
   }
 
-  Widget _summaryCard(String label, String value, IconData icon, Color color) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(AppRadius.md),
-          border: Border.all(color: color.withValues(alpha: 0.18)),
-        ),
-        child: Column(children: [
-          Container(
-            width: 30, height: 30,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(color: color.withValues(alpha: 0.12), shape: BoxShape.circle),
-            child: Icon(icon, size: 16, color: color),
-          ),
-          const SizedBox(height: 6),
-          Text(value, style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: color)),
-          const SizedBox(height: 2),
-          Text(label, textAlign: TextAlign.center, style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
-        ]),
-      ),
-    );
-  }
-
   Widget _buildBody() {
     final d = _data!;
     return AppRefreshIndicator(
@@ -173,83 +148,53 @@ class _OtLensReportScreenState extends State<OtLensReportScreen> {
         padding: const EdgeInsets.fromLTRB(14, 12, 14, 24),
         children: [
           Row(children: [
-            _summaryCard('Lenses Used', '${d.summary.totalLensesUsed}', Icons.remove_red_eye_rounded, AppColors.purple),
-            const SizedBox(width: 10),
-            _summaryCard('Surgeries', '${d.summary.totalSurgeries}', Icons.cut_rounded, AppColors.teal),
-            const SizedBox(width: 10),
-            _summaryCard('Unique Powers', '${d.summary.uniquePowers}', Icons.blur_circular_rounded, AppColors.blue),
-          ]),
-          if (d.powerSummary.isNotEmpty) ...[
-            const SizedBox(height: 14),
+            Expanded(child: Text('Lens Power Breakdown', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: AppColors.primary))),
             Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(AppRadius.md),
-                border: Border.all(color: AppColors.primary.withValues(alpha: 0.1)),
-              ),
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text('Power Breakdown', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: AppColors.primary)),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: d.powerSummary.map((row) => Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                        decoration: BoxDecoration(color: const Color(0xFFF4F8FB), borderRadius: BorderRadius.circular(AppRadius.full)),
-                        child: Text('+${row.power}D × ${row.quantity}', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.primary)),
-                      )).toList(),
-                ),
-              ]),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+              decoration: BoxDecoration(color: AppColors.primary.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(AppRadius.full)),
+              child: Text('${d.rows.length} rows', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: AppColors.primary)),
             ),
-          ],
-          const SizedBox(height: 14),
-          Text('Lens Usage Detail', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: AppColors.primary)),
+          ]),
           const SizedBox(height: 8),
-          if (d.detailRows.isEmpty)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 24),
-              child: Center(child: Text('No data for ${d.from} – ${d.to}', style: const TextStyle(color: AppColors.textSecondary))),
+          if (d.rows.isEmpty)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 24),
+              child: Center(child: Text('No lens usage for the selected range.', style: TextStyle(color: AppColors.textSecondary))),
             )
           else
-            ...d.detailRows.map(_detailCard),
+            ...d.rows.map(_rowCard),
         ],
       ),
     );
   }
 
   static const _rotIcons = [
-    Icons.badge_outlined,
-    Icons.numbers_rounded,
-    Icons.remove_red_eye_outlined,
-    Icons.label_outline_rounded,
+    Icons.category_outlined,
     Icons.factory_outlined,
-    Icons.medical_services_outlined,
+    Icons.label_outline_rounded,
+    Icons.remove_red_eye_outlined,
+    Icons.numbers_rounded,
   ];
   static final _rotColors = [
+    AppColors.purple,
+    AppColors.orange,
+    AppColors.teal,
     AppColors.blue,
     AppColors.green,
-    AppColors.purple,
-    AppColors.teal,
-    AppColors.orange,
-    AppColors.primary,
   ];
 
-  // Columns (web's $detailHeadings): Surgery Date, Patient Name, MRD No.,
-  // Lens Power, Lens Name, Lens Company, Doctor — index 1 (Patient Name)
-  // becomes the card title, the rest render as fields in order.
-  Widget _detailCard(List<dynamic> row) {
-    final headings = _data!.detailHeadings;
-    final fields = <AppRecordField>[];
-    var col = 0;
-    for (var i = 0; i < row.length; i++) {
-      if (i == 1) continue; // title
-      fields.add(AppRecordField(headings[i], '${row[i]}', icon: _rotIcons[col % _rotIcons.length], color: _rotColors[col % _rotColors.length]));
-      col++;
-    }
+  // Columns (web headings): Lens Power, Lens Category, Lens Company, Lens
+  // Model, Lens Type, Count. Column 0 (Lens Power) is the card title, the
+  // rest render as fields in order.
+  Widget _rowCard(List<dynamic> row) {
+    final headings = _data!.headings;
+    final fields = <AppRecordField>[
+      for (var i = 1; i < row.length && i < headings.length; i++)
+        AppRecordField(headings[i], '${row[i]}', icon: _rotIcons[(i - 1) % _rotIcons.length], color: _rotColors[(i - 1) % _rotColors.length]),
+    ];
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
-      child: AppRecordCard(title: row.length > 1 ? '${row[1]}' : '-', fields: fields),
+      child: AppRecordCard(title: row.isNotEmpty ? '${row[0]}' : '-', fields: fields),
     );
   }
 }

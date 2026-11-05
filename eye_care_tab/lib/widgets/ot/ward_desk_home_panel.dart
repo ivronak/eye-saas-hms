@@ -4,7 +4,6 @@ import '../../constants/app_colors.dart';
 import '../../constants/app_radius.dart';
 import '../../models/ot_accountant_models.dart';
 import '../../models/ot_booking_models.dart';
-import '../../models/ot_ward_models.dart';
 import '../../screens/ot_ward_queue_screen.dart';
 import '../../services/ot_ward_service.dart';
 import '../../utils/refreshable.dart';
@@ -57,19 +56,12 @@ class _WardDeskHomePanelState extends State<WardDeskHomePanel> implements Refres
   String _activeTab = 'queue';
   final Map<String, List<OtBookingSummary>> _items = {};
   final Map<String, int> _counts = {};
-  Timer? _dilateTicker;
 
   @override
   void initState() {
     super.initState();
     if (widget.requestedTab != null) _activeTab = widget.requestedTab!;
     _load();
-    // Live mm:ss Dilate countdown — matches web's own 1s setInterval on this
-    // same panel (ward-panel.blade.php), and the dedicated Ward Entry Queue
-    // screen's own ticker. Cheap: just a rebuild, no refetch.
-    _dilateTicker = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (mounted) setState(() {});
-    });
   }
 
   @override
@@ -81,7 +73,6 @@ class _WardDeskHomePanelState extends State<WardDeskHomePanel> implements Refres
 
   @override
   void dispose() {
-    _dilateTicker?.cancel();
     super.dispose();
   }
 
@@ -124,7 +115,7 @@ class _WardDeskHomePanelState extends State<WardDeskHomePanel> implements Refres
     ScaledTableColumn('PATIENT NAME', 170, grow: true),
     ScaledTableColumn('PHONE', 110),
     ScaledTableColumn('STATUS', 140),
-    ScaledTableColumn('DILATE', 110),
+    ScaledTableColumn('DOSE', 110),
     ScaledTableColumn('PAYMENT', 120),
     ScaledTableColumn('ACTION', 190, hug: true),
   ];
@@ -161,7 +152,7 @@ class _WardDeskHomePanelState extends State<WardDeskHomePanel> implements Refres
       deskPatientNameCell(name: item.patient?.fullName ?? 'Patient', subLine: item.patient?.patientCode),
       Text(item.patient?.contactNo ?? '—', maxLines: 1, softWrap: false, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary)),
       deskStatusPill(statusLabel.toUpperCase(), statusColor),
-      _dilateCell(item),
+      _doseCell(item),
       Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
         deskStatusPill(paymentLabel.toUpperCase(), paymentColor),
         if (ps == 'partially_paid' && item.remainingBalance != null)
@@ -175,57 +166,25 @@ class _WardDeskHomePanelState extends State<WardDeskHomePanel> implements Refres
     ];
   }
 
-  Widget _dilateCell(OtBookingSummary item) {
-    final unlockAt = _wardPanelDilateUnlockAt(item);
-    if (unlockAt == null) {
+  Widget _doseCell(OtBookingSummary item) {
+    final doses = item.dilationEntries.length;
+    if (doses == 0) {
       return const Text('—', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary));
     }
-    final ready = !unlockAt.isAfter(DateTime.now());
-    final color = ready ? AppColors.green : AppColors.orange;
     return Align(
       alignment: Alignment.centerLeft,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-        decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(AppRadius.full)),
+        decoration: BoxDecoration(color: AppColors.blue.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(AppRadius.full)),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.water_drop_outlined, size: 12, color: color),
+            const Icon(Icons.water_drop_outlined, size: 12, color: AppColors.blue),
             const SizedBox(width: 4),
-            Text(_wardPanelDilateCountdownLabel(unlockAt), style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: color)),
+            Text('$doses', style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: AppColors.blue)),
           ],
         ),
       ),
     );
   }
-}
-
-// Web parity (`ward.blade.php`'s Dilate column, also shown on this same
-// panel on web — `ward-panel.blade.php`) — the latest logged dose with
-// dilate='Yes' and a dilation_time set, resolved to the actual wall-clock
-// moment it unlocks. Duplicated from ot_ward_queue_screen.dart's
-// file-private helpers of the same name/logic (only the 2nd caller so far —
-// worth factoring out to a shared file if a 3rd appears).
-DateTime? _wardPanelDilateUnlockAt(OtBookingSummary item) {
-  OtEyeDropEntry? latest;
-  DateTime? latestAt;
-  for (final d in item.dilationEntries) {
-    if (d.dilate != 'Yes' || d.dilationTime == null) continue;
-    final at = DateTime.tryParse(d.administeredAt ?? '');
-    if (at == null) continue;
-    if (latestAt == null || at.isAfter(latestAt)) {
-      latest = d;
-      latestAt = at;
-    }
-  }
-  if (latest == null || latestAt == null) return null;
-  return latestAt.add(Duration(minutes: latest.dilationTime!));
-}
-
-String _wardPanelDilateCountdownLabel(DateTime unlockAt) {
-  final diff = unlockAt.difference(DateTime.now());
-  if (diff.isNegative) return 'Ready';
-  final m = diff.inMinutes;
-  final s = diff.inSeconds.remainder(60);
-  return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
 }

@@ -117,7 +117,7 @@ class _OtPackageMasterScreenState extends State<OtPackageMasterScreen> {
     bool saving = false;
     String? nameErr;
 
-    await showDialog<void>(
+    await showAppDialog<void>(
       context: context,
       builder: (dCtx) => StatefulBuilder(
         builder: (_, ss) {

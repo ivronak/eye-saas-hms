@@ -575,59 +575,12 @@ class _PatientFormScreenState extends State<PatientFormScreen> {
         Icons.edit_rounded,
       ),
     };
-    return Row(
-      children: [
-        IconButton(
-          icon: Icon(Icons.close_rounded, color: AppColors.primary),
-          onPressed: widget.onCancel,
-          tooltip: 'Cancel',
-        ),
-        Container(
-          width: 42,
-          height: 42,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [AppColors.primary, AppColors.blueLight],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(13),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.primary.withValues(alpha: 0.28),
-                blurRadius: 10,
-                offset: const Offset(0, 3),
-              ),
-            ],
-          ),
-          child: Icon(icon, color: Colors.white, size: 20),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: TextStyle(
-                  color: AppColors.darkNavy,
-                  fontSize: 17,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-              Text(
-                subtitle,
-                style: const TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 11,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
+    return AppPaneHeader(
+        icon: icon,
+        title: title,
+        subtitle: subtitle,
+        onClose: widget.onCancel,
+      );
   }
 
   Widget _buildForm() {

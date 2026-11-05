@@ -16,6 +16,7 @@ import '../widgets/app_refresh_indicator.dart';
 import '../widgets/change_password_dialog.dart';
 import '../widgets/search_picker_dialog.dart';
 import '../widgets/skeleton.dart';
+import '../widgets/app_dialog.dart';
 
 /// Tablet Hospital Settings — single scrollable form (Pattern C, 2-column
 /// field pairs within each section card) replacing mobile's AppBar+footer
@@ -1652,7 +1653,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _showChangePasswordDialog() {
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (_) => ChangePasswordDialog(
         onSubmit: (current, next, confirm) =>

@@ -2040,6 +2040,7 @@ class _SecondaryExamScreenState extends State<SecondaryExamScreen> {
       children: [
         ChipPickerField(
           controller: addCtrl,
+          positiveOnly: true,
           title: 'Add  ·  ${eye == 're' ? 'Right Eye (RE)' : 'Left Eye (LE)'}  ·  ST',
           items: _formData?.masters.sphCyl ?? [],
           isSignField: true,

@@ -16,7 +16,7 @@ Future<bool?> showRecommendSurgeryDialog(
   String? diagnosisHint,
   Future<void> Function()? beforeRecommend,
 }) {
-  return showDialog<bool>(
+  return showAppDialog<bool>(
     context: context,
     builder: (_) => _RecommendSurgeryDialog(patient: patient, diagnosisHint: diagnosisHint, beforeRecommend: beforeRecommend),
   );

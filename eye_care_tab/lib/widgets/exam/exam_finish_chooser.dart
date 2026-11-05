@@ -11,7 +11,7 @@ Future<ExamFinishChoice?> showExamFinishChooser(
   BuildContext context, {
   required bool canRecommend,
 }) {
-  return showDialog<ExamFinishChoice>(
+  return showAppDialog<ExamFinishChoice>(
     context: context,
     builder: (ctx) => AppDialog(
       size: AppDialogSize.small,

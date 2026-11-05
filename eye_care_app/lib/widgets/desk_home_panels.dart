@@ -6,7 +6,6 @@ import 'app_record_card.dart';
 import '../models/auth_models.dart';
 import '../models/ot_accountant_models.dart';
 import '../models/ot_booking_models.dart';
-import '../models/ot_ward_models.dart';
 import '../models/ot_discharge_models.dart';
 import '../screens/ot_accountant_dashboard_screen.dart';
 import '../screens/ot_assistant_dashboard_screen.dart';
@@ -477,19 +476,12 @@ class _WardDeskPanelState extends State<WardDeskPanel> implements Refreshable {
   String? _error;
   final Map<String, List<OtBookingSummary>> _items = {};
   final Map<String, int> _totals = {};
-  Timer? _dilateTicker;
 
   @override
   void initState() {
     super.initState();
     if (widget.requestedTab != null) _tab = widget.requestedTab!;
     _load();
-    // Live mm:ss Dilate countdown — matches web's own 1s setInterval on this
-    // same panel (ward-panel.blade.php), and the dedicated Ward Entry Queue
-    // screen's own ticker. Cheap: just a rebuild, no refetch.
-    _dilateTicker = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (mounted) setState(() {});
-    });
   }
 
   @override
@@ -501,7 +493,6 @@ class _WardDeskPanelState extends State<WardDeskPanel> implements Refreshable {
 
   @override
   void dispose() {
-    _dilateTicker?.cancel();
     super.dispose();
   }
 
@@ -586,7 +577,7 @@ class _WardDeskPanelState extends State<WardDeskPanel> implements Refreshable {
   Widget _row(OtBookingSummary item) {
     final status = _deskStatusVisual(item.otStatus);
     final payment = _deskPaymentVisual(item.paymentStatus);
-    final dilateUnlock = _wardDilateUnlockAt(item);
+    final doseCount = item.dilationEntries.length;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -639,12 +630,12 @@ class _WardDeskPanelState extends State<WardDeskPanel> implements Refreshable {
                     icon: Icons.phone_outlined,
                     color: RecordFieldColors.phone,
                   ),
-                  if (dilateUnlock != null)
+                  if (doseCount > 0)
                     AppRecordField(
-                      'Dilate',
-                      _wardDilateCountdownLabel(dilateUnlock),
+                      'Dose',
+                      '$doseCount',
                       icon: Icons.water_drop_outlined,
-                      color: dilateUnlock.isAfter(DateTime.now()) ? AppColors.orange : AppColors.green,
+                      color: AppColors.blue,
                     ),
                 ],
               ),
@@ -681,36 +672,6 @@ class _WardDeskPanelState extends State<WardDeskPanel> implements Refreshable {
       ],
     );
   }
-}
-
-// Web parity (`ward.blade.php`'s Dilate column, also shown on this same
-// panel on web — `ward-panel.blade.php`) — the latest logged dose with
-// dilate='Yes' and a dilation_time set, resolved to the actual wall-clock
-// moment it unlocks. Duplicated from ot_ward_queue_screen.dart's
-// file-private helpers of the same name/logic (only the 2nd caller so far —
-// worth factoring out to a shared file if a 3rd appears).
-DateTime? _wardDilateUnlockAt(OtBookingSummary item) {
-  OtEyeDropEntry? latest;
-  DateTime? latestAt;
-  for (final d in item.dilationEntries) {
-    if (d.dilate != 'Yes' || d.dilationTime == null) continue;
-    final at = DateTime.tryParse(d.administeredAt ?? '');
-    if (at == null) continue;
-    if (latestAt == null || at.isAfter(latestAt)) {
-      latest = d;
-      latestAt = at;
-    }
-  }
-  if (latest == null || latestAt == null) return null;
-  return latestAt.add(Duration(minutes: latest.dilationTime!));
-}
-
-String _wardDilateCountdownLabel(DateTime unlockAt) {
-  final remaining = unlockAt.difference(DateTime.now());
-  if (remaining.isNegative) return 'Ready';
-  final mm = remaining.inMinutes.toString().padLeft(2, '0');
-  final ss = (remaining.inSeconds % 60).toString().padLeft(2, '0');
-  return '$mm:$ss';
 }
 
 // ── 3. OT Assistant ──────────────────────────────────────────────────────

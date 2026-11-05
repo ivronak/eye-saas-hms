@@ -188,7 +188,7 @@ class _PatientHistoryTabState extends State<_PatientHistoryTab> with AutomaticKe
   // cross-tenant flow and is left untouched.
   Future<void> _onView(HistoryPatient p) async {
     if (p.isOwn) {
-      showDialog<void>(
+      showAppDialog<void>(
         context: context,
         barrierDismissible: false,
         builder: (_) => const Center(
@@ -393,7 +393,7 @@ class _HospitalHistoryTabState extends State<_HospitalHistoryTab> with Automatic
   }
 
   Future<void> _openDetail(ShareHospital h) async {
-    showDialog(context: context, builder: (_) => _HospitalDetailDialog(hospitalId: h.id, hospitalName: h.name));
+    showAppDialog(context: context, builder: (_) => _HospitalDetailDialog(hospitalId: h.id, hospitalName: h.name));
   }
 
   Future<void> _sendRequest(ShareHospital h) async {

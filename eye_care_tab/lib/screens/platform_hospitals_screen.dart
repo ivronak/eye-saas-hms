@@ -589,7 +589,7 @@ class _HospitalDetailPaneState extends State<_HospitalDetailPane> {
 
   Future<void> _extendGrace() async {
     int days = 7;
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showAppDialog<bool>(
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, set) => AppDialog(

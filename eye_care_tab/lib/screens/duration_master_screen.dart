@@ -93,7 +93,7 @@ class _DurationMasterScreenState extends State<DurationMasterScreen> {
   }
 
   Future<void> _openDialog({DurationItem? item}) async {
-    final saved = await showDialog<bool>(
+    final saved = await showAppDialog<bool>(
       context: context,
       builder: (_) =>
           _DurationDialog(item: item, accentColor: widget.accentColor),

@@ -97,7 +97,7 @@ class _OtSurgeryTypeMasterScreenState extends State<OtSurgeryTypeMasterScreen> {
   }
 
   Future<void> _openDialog({OtSurgeryTypeItem? item}) async {
-    final saved = await showDialog<bool>(
+    final saved = await showAppDialog<bool>(
       context: context,
       builder: (_) => _OtSurgeryTypeDialog(
         item: item,

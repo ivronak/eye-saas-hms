@@ -131,7 +131,7 @@ class _OtDischargeDashboardScreenState
         bottom: OtDeskFilterBar(
           options: const [
             OtFilterOption('queue', 'Queue'),
-            OtFilterOption('history', 'All'),
+            OtFilterOption('history', 'Completed'),
           ],
           selected: _filter,
           onChanged: _setFilter,

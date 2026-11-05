@@ -14,7 +14,7 @@ Future<void> showRecordView(
   List<HeaderFact> facts = const [],
   required List<FactSection> sections,
 }) {
-  return showDialog<void>(
+  return showAppDialog<void>(
     context: context,
     builder: (dCtx) => AppDialog(
       size: AppDialogSize.large,

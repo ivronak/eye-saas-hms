@@ -97,7 +97,7 @@ class _OtLensPowerMasterScreenState extends State<OtLensPowerMasterScreen> {
   }
 
   Future<void> _openDialog({LensPowerItem? item}) async {
-    final saved = await showDialog<bool>(
+    final saved = await showAppDialog<bool>(
       context: context,
       builder: (_) =>
           _OtLensPowerDialog(item: item, accentColor: widget.accentColor),

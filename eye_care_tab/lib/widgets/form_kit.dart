@@ -128,10 +128,18 @@ class AppDialogHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tile = colors ?? [AppColors.primary, AppColors.blueLight];
-    return Container(
-      padding: const EdgeInsets.fromLTRB(20, 16, 12, 14),
-      decoration: BoxDecoration(border: Border(bottom: BorderSide(color: AppColors.primaryA08))),
-      child: Row(children: [
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(colors: [tile.first.withValues(alpha: 0.10), tile.last.withValues(alpha: 0.02)], begin: Alignment.topLeft, end: Alignment.bottomRight),
+        border: Border(bottom: BorderSide(color: tile.first.withValues(alpha: 0.12))),
+      ),
+      child: Column(mainAxisSize: MainAxisSize.min, children: [
+        // Accent stripe — the module's colour, same idea as the reference
+        // modal's gradient top edge.
+        Container(height: 4, decoration: BoxDecoration(gradient: LinearGradient(colors: [...tile, tile.last.withValues(alpha: 0.35)]))),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(20, 14, 14, 14),
+          child: Row(children: [
         leading ??
             Container(
               width: 40,
@@ -156,17 +164,63 @@ class AppDialogHeader extends StatelessWidget {
         ),
         if (trailing != null) ...[const SizedBox(width: 10), trailing!],
         if (onClose != null) ...[
-          const SizedBox(width: 4),
-          IconButton(
-            icon: const Icon(Icons.close_rounded, size: 20),
-            color: AppColors.textSecondary,
-            tooltip: 'Close',
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints.tightFor(width: 40, height: 40),
-            onPressed: onClose,
-          ),
+          const SizedBox(width: 6),
+          AppCloseButton(onPressed: onClose!),
         ],
+          ]),
+        ),
       ]),
+    );
+  }
+}
+
+/// Rounded-square close "X" — always the last thing in a dialog header
+/// (top-right). Tinted tile, 40px target, pressed state.
+class AppCloseButton extends StatelessWidget {
+  final VoidCallback onPressed;
+  final String tooltip;
+  const AppCloseButton({super.key, required this.onPressed, this.tooltip = 'Close'});
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: tooltip,
+      child: Material(
+        color: AppColors.primaryA08,
+        borderRadius: BorderRadius.circular(AppRadius.md),
+        child: InkWell(
+          onTap: onPressed,
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          child: const SizedBox(width: 40, height: 40, child: Icon(Icons.close_rounded, size: 20, color: AppColors.textSecondary)),
+        ),
+      ),
+    );
+  }
+}
+
+/// [AppDialogHeader] for panes that sit inside the padded [showPaneDialog]
+/// frame (counselling, ward, user form, ...): same look, but rounded and
+/// bordered so it reads as a header card rather than a full-bleed band.
+class AppPaneHeader extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String? subtitle;
+  final VoidCallback? onClose;
+  final List<Color>? colors;
+  final Widget? leading;
+  final Widget? trailing;
+
+  const AppPaneHeader({super.key, required this.icon, required this.title, this.subtitle, this.onClose, this.colors, this.leading, this.trailing});
+
+  @override
+  Widget build(BuildContext context) {
+    final accent = (colors ?? [AppColors.primary, AppColors.blueLight]).first;
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(AppRadius.lg),
+      child: DecoratedBox(
+        decoration: BoxDecoration(border: Border.all(color: accent.withValues(alpha: 0.14)), borderRadius: BorderRadius.circular(AppRadius.lg)),
+        child: AppDialogHeader(icon: icon, title: title, subtitle: subtitle, onClose: onClose, colors: colors, leading: leading, trailing: trailing),
+      ),
     );
   }
 }

@@ -266,7 +266,7 @@ class _SimpleMedMasterTabState extends State<_SimpleMedMasterTab>
   Future<void> _openDialog({MedMasterItem? item}) async {
     final ctrl = TextEditingController(text: item?.name ?? '');
     bool saving = false;
-    await showDialog<void>(
+    await showAppDialog<void>(
       context: context,
       builder: (dCtx) => StatefulBuilder(
         builder: (_, ss) {
@@ -561,7 +561,7 @@ class _MedicinesCatalogTabState extends State<_MedicinesCatalogTab>
     bool saving = false;
     final formKey = GlobalKey<FormState>();
 
-    await showDialog<void>(
+    await showAppDialog<void>(
       context: context,
       builder: (dCtx) => StatefulBuilder(
         builder: (_, ss) {
@@ -726,7 +726,7 @@ class _MedicinesCatalogTabState extends State<_MedicinesCatalogTab>
   }
 
   Future<void> _openImportDialog() async {
-    await showDialog<void>(
+    await showAppDialog<void>(
       context: context,
       builder: (ctx) =>
           _ImportMedicinesDialog(onImported: () => _load(page: _page)),

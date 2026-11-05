@@ -9,11 +9,9 @@ import '../utils/app_dialogs.dart';
 import '../utils/app_route.dart';
 import '../utils/date_format.dart';
 import '../widgets/app_animations.dart';
-import '../widgets/app_dialog.dart';
 import '../widgets/app_empty_state.dart';
 import '../widgets/app_error_state.dart';
 import '../widgets/app_refresh_indicator.dart';
-import '../widgets/form_kit.dart';
 import '../widgets/ot_date_range_chip.dart';
 import '../widgets/ot_panel_header.dart';
 import '../widgets/permission_guard.dart';
@@ -24,7 +22,7 @@ import '../widgets/table_row_action.dart';
 
 /// Doctor's own OT patient drill-down — net new (web pull 2026-08-07,
 /// "Phase 2"): two actions once a patient's ward consult is pending —
-/// Assign OT Assistant (agrees OT, marks Ready) or Refuse Surgery (sends to
+/// Ready for OT (sends to the doctor's connected OT Assistant) or Refuse Surgery (sends to
 /// Accounts for a full refund). Neither app had this screen before. Plain
 /// embedded list (no Pattern A pane) — both actions happen via dialogs, no
 /// drill-down detail is needed. See WEB_PULL_2026_08_07_APP_PARITY_AUDIT.md §5.
@@ -71,7 +69,6 @@ bool _isConsultPending(OtBookingSummary b) {
 class _DoctorOtListScreenState extends State<DoctorOtListScreen> {
   List<OtBookingSummary> _items = [];
   OtPaginationMeta? _meta;
-  List<OtNamedRef> _otAssistants = [];
   bool _loading = true;
   String? _error;
   int _page = 1;
@@ -103,7 +100,6 @@ class _DoctorOtListScreenState extends State<DoctorOtListScreen> {
         setState(() {
           _items = result.items;
           _meta = result.meta;
-          _otAssistants = result.otAssistants;
           _loading = false;
         });
       }
@@ -116,69 +112,17 @@ class _DoctorOtListScreenState extends State<DoctorOtListScreen> {
     }
   }
 
-  Future<void> _assignAssistant(OtBookingSummary item) async {
-    if (_otAssistants.isEmpty) {
-      showAppSnackBar(context, 'No active OT Assistants found.', isError: true);
-      return;
-    }
-    int? selected;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dCtx) => StatefulBuilder(
-        builder: (_, ss) => AppDialog(
-          size: AppDialogSize.small,
-          header: AppDialogHeader(
-            icon: Icons.assignment_ind_rounded,
-            title: 'Assign OT Assistant',
-            subtitle: item.patient?.fullName,
-            onClose: () => Navigator.pop(dCtx, false),
-          ),
-          body: DropdownButtonFormField<int>(
-            initialValue: selected,
-            isExpanded: true,
-            decoration: appFieldDecoration('OT Assistant *'),
-            items: _otAssistants
-                .map(
-                  (a) => DropdownMenuItem(
-                    value: a.id,
-                    child: Text(a.name, overflow: TextOverflow.ellipsis),
-                  ),
-                )
-                .toList(),
-            onChanged: (v) => ss(() => selected = v),
-          ),
-          actions: [
-            AppSecondaryButton(onPressed: () => Navigator.pop(dCtx, false)),
-            AppPrimaryButton(
-              label: 'Assign & Mark Ready',
-              onPressed: selected == null
-                  ? null
-                  : () => Navigator.pop(dCtx, true),
-            ),
-          ],
-        ),
-      ),
-    );
-    if (confirmed != true || selected == null || !mounted) return;
+    /// Web pull 2026-10-19: the OT Assistant picker is gone — "Ready for OT"
+  /// sends the patient to this booking's doctor's connected OT Assistant
+  /// (resolved server-side from the doctor's profile), same auto-assign the
+  /// ward's "Ready for OT" uses.
+  Future<void> _readyForOt(OtBookingSummary item) async {
     try {
-      await DoctorOtListService.instance.assignAssistant(
-        item.id,
-        otAssistantId: selected!,
-      );
-      if (mounted)
-        showAppSnackBar(
-          context,
-          'OT Assistant assigned. Patient is Ready for OT.',
-          isSuccess: true,
-        );
+      await DoctorOtListService.instance.assignAssistant(item.id);
+      if (mounted) showAppSnackBar(context, 'Patient assigned to OT Assistant and marked Ready for OT.', isSuccess: true);
       _load();
     } catch (e) {
-      if (mounted)
-        showAppSnackBar(
-          context,
-          e.toString().replaceFirst('Exception: ', ''),
-          isError: true,
-        );
+      if (mounted) showAppSnackBar(context, e.toString().replaceFirst('Exception: ', ''), isError: true);
     }
   }
 
@@ -431,8 +375,8 @@ class _DoctorOtListScreenState extends State<DoctorOtListScreen> {
           ? ActionCluster(
               children: [
                 TableLabelAction(
-                  label: 'Assign',
-                  onTap: () => _assignAssistant(item),
+                  label: 'Ready for OT',
+                  onTap: () => _readyForOt(item),
                 ),
                 TableLabelAction(
                   label: 'Refuse',

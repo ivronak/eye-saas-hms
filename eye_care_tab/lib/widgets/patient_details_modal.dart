@@ -22,7 +22,7 @@ Future<void> showPatientDetailsModal(
   Patient patient, {
   void Function(Patient updated)? onSaved,
 }) {
-  return showDialog<void>(
+  return showAppDialog<void>(
     context: context,
     builder: (dCtx) => _PatientDetailsPane(patient: patient, onSaved: onSaved),
   );

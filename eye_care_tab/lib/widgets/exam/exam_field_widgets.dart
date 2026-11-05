@@ -6,6 +6,7 @@ import '../app_animations.dart';
 import 'anchored_popover.dart';
 import 'master_list_popover.dart';
 import 'sign_grid_popover.dart';
+import '../app_dialog.dart';
 
 /// Shared building blocks for Primary/Secondary Exam screens — see
 /// EXAMINATIONS_MODULE_PRD.md §6 (picker patterns) and §8.2 (anchored
@@ -276,8 +277,10 @@ class ChipPickerField extends StatefulWidget {
   /// Header text of the floating picker, naming the field being filled
   /// (e.g. "SPH · Right Eye · PG").
   final String? title;
+  /// Sign picker offers only "+" (ST Near ADD — web has no minus button there).
+  final bool positiveOnly;
 
-  const ChipPickerField({super.key, required this.controller, required this.items, required this.isSignField, this.disabled = false, this.onChanged, this.onFinalPick, this.exposeOpener, this.title});
+  const ChipPickerField({super.key, required this.controller, required this.items, required this.isSignField, this.disabled = false, this.onChanged, this.onFinalPick, this.exposeOpener, this.title, this.positiveOnly = false});
 
   @override
   State<ChipPickerField> createState() => _ChipPickerFieldState();
@@ -295,7 +298,7 @@ class _ChipPickerFieldState extends State<ChipPickerField> {
     final screen = MediaQuery.of(context).size;
     final width = (screen.width * 0.88).clamp(360.0, 900.0);
     final height = (screen.height * 0.85).clamp(360.0, 680.0);
-    showDialog<void>(
+    showAppDialog<void>(
       context: context,
       builder: (ctx) {
         void close() => Navigator.of(ctx).maybePop();
@@ -310,6 +313,7 @@ class _ChipPickerFieldState extends State<ChipPickerField> {
                     items: widget.items,
                     current: widget.controller.text,
                     title: widget.title,
+                    positiveOnly: widget.positiveOnly,
                     onApply: (v) {
                       setState(() { widget.controller.text = v; widget.onChanged?.call(); });
                       widget.onFinalPick?.call();

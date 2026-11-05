@@ -160,7 +160,6 @@ class _ReceptionQuickBubbleState extends State<ReceptionQuickBubble> {
     setState(() => _open = false);
     await showPaneDialog<void>(
       nav,
-      barrierDismissible: false,
       builder: (dCtx) => PatientFormScreen(
         mode: PatientFormMode.addWalkIn,
         user: user,
@@ -182,7 +181,6 @@ class _ReceptionQuickBubbleState extends State<ReceptionQuickBubble> {
     setState(() => _open = false);
     await showPaneDialog<void>(
       nav,
-      barrierDismissible: false,
       builder: (dCtx) => PatientFormScreen(
         mode: PatientFormMode.addPhone,
         user: user,
@@ -202,7 +200,6 @@ class _ReceptionQuickBubbleState extends State<ReceptionQuickBubble> {
     setState(() => _open = false);
     await showPaneDialog<void>(
       nav,
-      barrierDismissible: false,
       builder: (dCtx) => OtAppointmentFormPane(
         item: null,
         onSaved: () {

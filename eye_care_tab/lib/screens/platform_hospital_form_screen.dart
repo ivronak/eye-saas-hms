@@ -10,6 +10,7 @@ import '../utils/app_decorations.dart';
 import '../utils/phone_rules.dart';
 import '../widgets/app_animations.dart';
 import '../widgets/app_section_header.dart';
+import '../widgets/form_kit.dart';
 
 /// Tablet Hospital create/edit form — embedded in the Hospitals detail pane
 /// (Pattern C) instead of being pushed as its own route. Business logic
@@ -140,17 +141,12 @@ class _PlatformHospitalFormScreenState extends State<PlatformHospitalFormScreen>
   }
 
   Widget _buildHeader() {
-    return Row(children: [
-      IconButton(icon: Icon(Icons.close_rounded, color: AppColors.primary), onPressed: widget.onCancel, tooltip: 'Cancel'),
-      Container(width: 40, height: 40, decoration: BoxDecoration(color: AppColors.primaryA10, borderRadius: BorderRadius.circular(AppRadius.md)), child: Icon(_isEdit ? Icons.edit_rounded : Icons.add_business_rounded, color: AppColors.primary, size: 20)),
-      const SizedBox(width: 12),
-      Expanded(
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(_isEdit ? 'Edit Hospital' : 'New Hospital', style: TextStyle(color: AppColors.primary, fontSize: 17, fontWeight: FontWeight.w800)),
-          Text('Tenant, admin and billing details', style: TextStyle(color: AppColors.textSecondary, fontSize: 11)),
-        ]),
-      ),
-    ]);
+    return AppPaneHeader(
+        icon: _isEdit ? Icons.edit_rounded : Icons.add_business_rounded,
+        title: _isEdit ? 'Edit Hospital' : 'New Hospital',
+        subtitle: 'Tenant, admin and billing details',
+        onClose: widget.onCancel,
+      );
   }
 
   Widget _buildForm() {

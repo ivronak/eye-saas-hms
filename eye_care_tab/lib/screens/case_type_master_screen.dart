@@ -97,7 +97,7 @@ class _CaseTypeMasterScreenState extends State<CaseTypeMasterScreen> {
   }
 
   Future<void> _openDialog({CaseTypeItem? item}) async {
-    final saved = await showDialog<bool>(
+    final saved = await showAppDialog<bool>(
       context: context,
       builder: (dCtx) =>
           _CaseTypeDialog(item: item, accentColor: widget.accentColor),

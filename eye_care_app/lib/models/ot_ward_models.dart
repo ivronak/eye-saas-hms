@@ -53,7 +53,9 @@ class OtVitalsItem {
         spo2: numOrStringToDouble(j['spo2']),
         hba1c: numOrStringToDouble(j['hba1c']),
         preOpStatus: j['pre_op_status'] as String? ?? 'preparing',
-        enteredBy: j['entered_by'] != null ? OtNamedRef.fromJson(j['entered_by'] as Map<String, dynamic>) : null,
+        // `entered_by` is a plain user-id int unless the endpoint eager-loads
+        // `preOp.enteredBy` (the Doctor OT list loads bare `preOp`).
+        enteredBy: j['entered_by'] is Map<String, dynamic> ? OtNamedRef.fromJson(j['entered_by'] as Map<String, dynamic>) : null,
       );
 }
 
@@ -69,10 +71,6 @@ class OtEyeDropEntry {
   // column the web modal's Eye Drop Register table shows, but this app's
   // own `addEyeDrop` form never collects (nullable).
   final int? dropsCount;
-  // Web pull 2026-10-10 — "Dilate?" Yes/No + minutes, shown alongside the
-  // other dose fields on the ward form and as a column in the register.
-  final String? dilate; // 'Yes' | 'No' | null
-  final int? dilationTime;
 
   const OtEyeDropEntry({
     required this.id,
@@ -83,8 +81,6 @@ class OtEyeDropEntry {
     this.administeredBy,
     this.remarks,
     this.dropsCount,
-    this.dilate,
-    this.dilationTime,
   });
 
   factory OtEyeDropEntry.fromJson(Map<String, dynamic> j) => OtEyeDropEntry(
@@ -96,8 +92,6 @@ class OtEyeDropEntry {
         administeredBy: j['administered_by'] != null ? OtNamedRef.fromJson(j['administered_by'] as Map<String, dynamic>) : null,
         remarks: j['remarks'] as String?,
         dropsCount: switch (j['drops_count']) { int v => v, num n => n.toInt(), String s => int.tryParse(s), _ => null },
-        dilate: j['dilate'] as String?,
-        dilationTime: switch (j['dilation_time']) { int v => v, num n => n.toInt(), String s => int.tryParse(s), _ => null },
       );
 }
 

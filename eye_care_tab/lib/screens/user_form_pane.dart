@@ -302,27 +302,12 @@ class _UserFormPaneState extends State<UserFormPane> {
   }
 
   Widget _buildHeader() {
-    return Row(
-      children: [
-        IconButton(icon: Icon(Icons.close_rounded, color: AppColors.primary), onPressed: widget.onCancel, tooltip: 'Cancel'),
-        Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(color: AppColors.primaryA10, borderRadius: BorderRadius.circular(AppRadius.md)),
-          child: Icon(_isEdit ? Icons.edit_rounded : Icons.person_add_rounded, color: AppColors.primary, size: 20),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(_isEdit ? 'Edit User' : 'Add User', style: TextStyle(color: AppColors.primary, fontSize: 17, fontWeight: FontWeight.w800)),
-              Text('Manage account, role and doctor details', style: TextStyle(color: AppColors.textSecondary, fontSize: 11)),
-            ],
-          ),
-        ),
-      ],
-    );
+    return AppPaneHeader(
+        icon: _isEdit ? Icons.edit_rounded : Icons.person_add_rounded,
+        title: _isEdit ? 'Edit User' : 'Add User',
+        subtitle: 'Manage account, role and doctor details',
+        onClose: widget.onCancel,
+      );
   }
 
   Widget _buildForm() {

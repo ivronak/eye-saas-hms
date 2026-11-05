@@ -170,7 +170,7 @@ abstract class _SimpleMasterTabState<T extends StatefulWidget> extends State<T>
   Future<void> _showForm({Map<String, dynamic>? item}) async {
     final ctrl = TextEditingController(text: item?[_fieldKey] as String? ?? '');
     final formKey = GlobalKey<FormState>();
-    final saved = await showDialog<bool>(
+    final saved = await showAppDialog<bool>(
       context: context,
       builder: (ctx) => AppDialog(
         size: AppDialogSize.small,
@@ -580,7 +580,7 @@ class _MedicinesTabState extends State<_MedicinesTab>
       showAppSnackBar(context, 'Form data not loaded', isError: true);
       return;
     }
-    await showDialog(
+    await showAppDialog(
       context: context,
       builder: (ctx) => _MedicineFormDialog(
         formData: _formData!,

@@ -94,8 +94,6 @@ class _WardEntryPaneState extends State<_WardEntryPane> {
   bool _loading = true;
   String? _loadError;
 
-  String? _currentOtStatus;
-  bool _sendingReady = false;
 
   // ── Vitals form — always visible, pre-filled from the latest save ───────
   late final TextEditingController _bpCtrl,
@@ -114,27 +112,18 @@ class _WardEntryPaneState extends State<_WardEntryPane> {
   // ── Eye-drop form (add new dose) ─────────────────────────────────────
   final _doseCtrl = TextEditingController();
   final _remarksCtrl = TextEditingController();
-  final _dilationTimeCtrl = TextEditingController();
   String? _medicineName;
   String _eye = 'RE';
   DateTime _administeredAt = toHospitalTime(DateTime.now());
-  // Web pull 2026-10-10 — "Dilate?" Yes/No; dilation time (minutes) is
-  // required only when Yes.
-  bool _dilate = false;
   bool _savingDrop = false;
-  String? _medicineError, _doseError, _dilationTimeError;
+  String? _medicineError, _doseError;
 
   bool get _canWriteVitals => PermissionService.instance.can(Perm.otPreopEntry);
   bool get _canWriteDrops =>
       PermissionService.instance.can(Perm.otDilationTrack);
-  // Web gates the whole ward page — including "send to OT Assistant" — by
-  // ot_ward_entry alone; the API's mark-ready route enforces the same key.
-  bool get _canSurgeryReady => PermissionService.instance.can(Perm.otWardEntry);
-
   @override
   void initState() {
     super.initState();
-    _currentOtStatus = widget.initialOtStatus;
     _bpCtrl = TextEditingController();
     _pulseCtrl = TextEditingController();
     _rbsCtrl = TextEditingController();
@@ -155,7 +144,6 @@ class _WardEntryPaneState extends State<_WardEntryPane> {
       _hba1cCtrl,
       _doseCtrl,
       _remarksCtrl,
-      _dilationTimeCtrl,
     ]) {
       c.dispose();
     }
@@ -218,7 +206,7 @@ class _WardEntryPaneState extends State<_WardEntryPane> {
     try {
       // Card 1 is clinical vitals only — the current pre_op_status is
       // carried forward unchanged from the Status section's own state.
-      final status = await OtWardService.instance.storeVitals(
+      await OtWardService.instance.storeVitals(
         widget.bookingId,
         {
           'bp': _bpCtrl.text.trim().isEmpty ? null : _bpCtrl.text.trim(),
@@ -235,7 +223,6 @@ class _WardEntryPaneState extends State<_WardEntryPane> {
       );
       if (!mounted) return;
       setState(() {
-        _currentOtStatus = status;
         _savingVitals = false;
       });
       showAppSnackBar(context, 'Vitals saved.', isSuccess: true);
@@ -274,8 +261,15 @@ class _WardEntryPaneState extends State<_WardEntryPane> {
             'assign_staff': true,
           });
       if (!mounted) return;
+      // Web pull 2026-10-17: Save Status on "Ready for OT" now hands the
+      // patient straight to the OT Assistant (the separate READY button is
+      // gone) and sends the user back to the dashboard.
+      if (status == 'ready') {
+        showAppSnackBar(context, 'Status saved. Patient assigned and sent to OT Assistant.', isSuccess: true);
+        Navigator.of(context).pop();
+        return;
+      }
       setState(() {
-        _currentOtStatus = status;
         _savingStatus = false;
       });
       showAppSnackBar(context, 'Status saved.', isSuccess: true);
@@ -294,17 +288,13 @@ class _WardEntryPaneState extends State<_WardEntryPane> {
 
   Future<void> _logEyeDrop() async {
     final dose = int.tryParse(_doseCtrl.text.trim());
-    final dilationTime = int.tryParse(_dilationTimeCtrl.text.trim());
     setState(() {
       _medicineError = _medicineName == null ? 'Required' : null;
       _doseError = (dose == null || dose < 1 || dose > 20)
           ? 'Must be 1-20'
           : null;
-      _dilationTimeError = _dilate && (dilationTime == null || dilationTime < 1 || dilationTime > 180)
-          ? 'Enter the dilation time (minutes)'
-          : null;
     });
-    if (_medicineError != null || _doseError != null || _dilationTimeError != null) return;
+    if (_medicineError != null || _doseError != null) return;
 
     setState(() => _savingDrop = true);
     try {
@@ -317,8 +307,6 @@ class _WardEntryPaneState extends State<_WardEntryPane> {
         remarks: _remarksCtrl.text.trim().isEmpty
             ? null
             : _remarksCtrl.text.trim(),
-        dilate: _dilate ? 'Yes' : 'No',
-        dilationTime: _dilate ? dilationTime : null,
       );
       if (!mounted) return;
       setState(() {
@@ -326,41 +314,12 @@ class _WardEntryPaneState extends State<_WardEntryPane> {
         _remarksCtrl.clear();
         _medicineName = null;
         _administeredAt = toHospitalTime(DateTime.now());
-        _dilate = false;
-        _dilationTimeCtrl.clear();
       });
       showAppSnackBar(context, 'Dose logged.', isSuccess: true);
       await _load();
     } catch (e) {
       if (mounted) {
         setState(() => _savingDrop = false);
-        showAppSnackBar(
-          context,
-          e.toString().replaceFirst('Exception: ', ''),
-          isError: true,
-        );
-      }
-    }
-  }
-
-  Future<void> _sendToOtAssistant() async {
-    setState(() => _sendingReady = true);
-    try {
-      final status = await OtWardService.instance.markReady(widget.bookingId);
-      if (mounted) {
-        setState(() {
-          _currentOtStatus = status;
-          _sendingReady = false;
-        });
-        showAppSnackBar(
-          context,
-          'Patient is ready and handed off to OT Assistant',
-          isSuccess: true,
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() => _sendingReady = false);
         showAppSnackBar(
           context,
           e.toString().replaceFirst('Exception: ', ''),
@@ -466,7 +425,6 @@ class _WardEntryPaneState extends State<_WardEntryPane> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         _buildVerificationCard(),
-                        _buildReadyBanner(),
                         // Web parity (`ot/ward/show.blade.php`): Vitals →
                         // Eye Drop Register → Patient Status, in that order.
                         AppDetailSectionCard(
@@ -539,101 +497,6 @@ class _WardEntryPaneState extends State<_WardEntryPane> {
                 ],
               ),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// "Ready to send to OT Assistant?" banner — a real action, not just a
-  /// status display. `_vitals.preOpStatus` is reliably known from the
-  /// server on every load (unlike `_currentOtStatus`, which needs seeding
-  /// from the caller), so the button shows whenever that's
-  /// `ready_for_surgery` and the booking status is eligible; whether an OT
-  /// Assistant is actually assigned isn't surfaced by any GET endpoint
-  /// here, so that last check is left to the backend's own validation
-  /// error on tap.
-  Widget _buildReadyBanner() {
-    final status = _currentOtStatus;
-    if (status == null) return const SizedBox.shrink();
-    final eligibleStatuses = {'payment_verified', 'in_ward'};
-    final preOpReady = _vitals?.preOpStatus == 'ready_for_surgery';
-    Color bg;
-    Color fg;
-    String label;
-    final showButton = eligibleStatuses.contains(status) && preOpReady;
-    if (status == 'ready') {
-      bg = AppColors.green.withValues(alpha: 0.12);
-      fg = AppColors.green;
-      label = 'READY — sent to OT Assistant';
-    } else if (eligibleStatuses.contains(status)) {
-      bg = const Color(0xFFF1F5F9);
-      fg = AppColors.textSecondary;
-      label = preOpReady
-          ? 'Ready to send to OT Assistant?'
-          : 'Save Ready + OT Assistant first';
-    } else {
-      bg = AppColors.orangeA12;
-      fg = AppColors.orange;
-      label = 'Current status: ${status.toUpperCase()}';
-    }
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          color: bg,
-          borderRadius: BorderRadius.circular(AppRadius.md),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              status == 'ready'
-                  ? Icons.check_circle_outline
-                  : Icons.info_outline,
-              size: 16,
-              color: fg,
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                label,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                  color: fg,
-                ),
-              ),
-            ),
-            if (showButton && _canSurgeryReady)
-              SizedBox(
-                height: 30,
-                child: ElevatedButton.icon(
-                  onPressed: _sendingReady ? null : _sendToOtAssistant,
-                  icon: _sendingReady
-                      ? const SizedBox(
-                          width: 12,
-                          height: 12,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : const Icon(Icons.send_rounded, size: 14),
-                  label: const Text(
-                    'READY',
-                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppRadius.sm),
-                    ),
-                  ),
-                ),
-              ),
           ],
         ),
       ),
@@ -911,17 +774,6 @@ class _WardEntryPaneState extends State<_WardEntryPane> {
                               fontWeight: FontWeight.w700,
                             ),
                           ),
-                          if (d.dilate == 'Yes')
-                            Text(
-                              'Dilated${d.dilationTime != null ? ' · ${d.dilationTime} mins' : ''}',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontSize: 10.5,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.tealDark,
-                              ),
-                            ),
                           if (d.remarks != null && d.remarks!.isNotEmpty)
                             Text(
                               d.remarks!,
@@ -1031,61 +883,6 @@ class _WardEntryPaneState extends State<_WardEntryPane> {
           const SizedBox(height: 10),
           TextFormField(controller: _remarksCtrl, decoration: _deco('Remarks')),
           const SizedBox(height: 10),
-          // Web pull 2026-10-10 — "Dilate?" Yes/No; dilation time (minutes)
-          // only required/shown when Yes.
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Dilate',
-                      style: TextStyle(
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                    const SizedBox(height: 7),
-                    Row(
-                      children: [
-                        ChoiceChip(
-                          label: const Text('Yes'),
-                          selected: _dilate,
-                          onSelected: (_) => setState(() {
-                            _dilate = true;
-                            _dilationTimeError = null;
-                          }),
-                        ),
-                        const SizedBox(width: 8),
-                        ChoiceChip(
-                          label: const Text('No'),
-                          selected: !_dilate,
-                          onSelected: (_) => setState(() {
-                            _dilate = false;
-                            _dilationTimeCtrl.clear();
-                            _dilationTimeError = null;
-                          }),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              if (_dilate) ...[
-                const SizedBox(width: 16),
-                Expanded(
-                  child: TextFormField(
-                    controller: _dilationTimeCtrl,
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    decoration: _deco('Dilation Time', suffix: 'mins', error: _dilationTimeError),
-                  ),
-                ),
-              ],
-            ],
-          ),
           const SizedBox(height: 12),
           SizedBox(
             width: double.infinity,

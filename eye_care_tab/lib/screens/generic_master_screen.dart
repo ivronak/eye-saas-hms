@@ -147,7 +147,7 @@ class _GenericMasterScreenState extends State<GenericMasterScreen> {
   }
 
   Future<void> _openDialog({SimpleMasterItem? item}) async {
-    final saved = await showDialog<bool>(
+    final saved = await showAppDialog<bool>(
       context: context,
       builder: (_) => _GenericMasterDialog(
         item: item,

@@ -60,7 +60,7 @@ class _PlatformPlansScreenState extends State<PlatformPlansScreen> {
 
   void _showEditDialog() {
     final d = _data!;
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (_) => _EditPlanDialog(initial: d, onSaved: (updated) {
         setState(() => _data = updated);
@@ -248,7 +248,7 @@ class _EditPlanDialogState extends State<_EditPlanDialog> {
 
   void _addFeature() {
     final ctrl = TextEditingController();
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (ctx) => AppDialog(
         size: AppDialogSize.small,

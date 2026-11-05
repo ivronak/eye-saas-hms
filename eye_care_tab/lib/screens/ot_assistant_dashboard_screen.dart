@@ -230,7 +230,7 @@ class _OtAssistantDashboardScreenState extends State<OtAssistantDashboardScreen>
                 SegmentedPillToggle<String>(
                   options: const [
                     (value: 'queue', label: 'Queue'),
-                    (value: 'history', label: 'All'),
+                    (value: 'history', label: 'Completed'),
                   ],
                   selected: _filter,
                   onChanged: _setFilter,
@@ -515,9 +515,6 @@ class _AssistantDetailPaneState extends State<_AssistantDetailPane> {
   OtSurgeryFormData? _formData;
   bool _saving = false;
 
-  bool get _canLensRecord => PermissionService.instance.can(Perm.otLensRecord);
-  bool get _canMedsTakehome =>
-      PermissionService.instance.can(Perm.otMedsTakehome);
 
   final _otRoomCtrl = TextEditingController();
   final _complicationNotesCtrl = TextEditingController();
@@ -830,57 +827,14 @@ class _AssistantDetailPaneState extends State<_AssistantDetailPane> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            IconButton(
-              icon: Icon(Icons.close_rounded, color: AppColors.primary),
-              onPressed: widget.onClose,
-              tooltip: 'Close',
-            ),
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [AppColors.primary, AppColors.blueLight],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(AppRadius.md),
-              ),
-              child: const Icon(
-                Icons.local_hospital_outlined,
-                color: Colors.white,
-                size: 20,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Surgery Recording Form',
-                    style: TextStyle(
-                      color: AppColors.primary,
-                      fontSize: 17,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  Text(
-                    _formData != null
+        AppPaneHeader(
+        icon: Icons.local_hospital_outlined,
+        title: 'Surgery Recording Form',
+        subtitle: _formData != null
                         ? '${widget.patientName}${_formData!.booking.eye != null ? ' · ${_formData!.booking.eye}' : ''}'
                         : widget.patientName,
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 11,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+        onClose: widget.onClose,
+      ),
         const SizedBox(height: 16),
         Expanded(
           child: _loading
@@ -1059,8 +1013,7 @@ class _AssistantDetailPaneState extends State<_AssistantDetailPane> {
                 ),
                 const SizedBox(height: 16),
 
-                if (_canLensRecord) ...[
-                  const AppSectionHeader(
+                                  const AppSectionHeader(
                     title: 'C. Lens Selection',
                     icon: Icons.remove_red_eye_outlined,
                   ),
@@ -1157,10 +1110,9 @@ class _AssistantDetailPaneState extends State<_AssistantDetailPane> {
                   const SizedBox(height: 10),
                   _lensImplantRow(),
                   const SizedBox(height: 16),
-                ],
 
-                if (_canMedsTakehome) ...[
-                  AppSectionHeader(
+
+                                  AppSectionHeader(
                     title: 'D. In-Ward Medicines',
                     icon: Icons.medication_outlined,
                     trailing: TextButton.icon(
@@ -1246,7 +1198,7 @@ class _AssistantDetailPaneState extends State<_AssistantDetailPane> {
                         ],
                       ),
                     ),
-                ],
+
               ],
             ),
           ),
@@ -1303,7 +1255,6 @@ Future<void> openOtSurgeryRecordingPane(
   return showPaneDialog<void>(
     context,
     wide: true,
-    barrierDismissible: false,
     builder: (dCtx) => _AssistantDetailPane(
       key: ValueKey('assistant-$bookingId'),
       bookingId: bookingId,
