@@ -24,7 +24,7 @@ Future<T?> showSearchPickerDialog<T>(
   Widget Function(BuildContext context, T item, VoidCallback select)? itemBuilder,
 }) {
   assert(items != null || loader != null, 'Pass items or loader');
-  return showDialog<T>(
+  return showAppDialog<T>(
     context: context,
     builder: (_) => _SearchPickerDialog<T>(
       title: title,

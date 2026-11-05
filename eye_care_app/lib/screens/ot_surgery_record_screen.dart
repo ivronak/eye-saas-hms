@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_radius.dart';
-import '../constants/permissions.dart';
 import '../models/medicine_models.dart';
 import '../utils/date_format.dart';
 import '../models/ot_assistant_models.dart';
 import '../services/ot_assistant_service.dart';
-import '../services/permission_service.dart';
 import '../widgets/app_animations.dart';
 import '../widgets/app_full_screen_error.dart';
 import '../widgets/app_text_field.dart';
@@ -55,9 +53,6 @@ class _OtSurgeryRecordScreenState extends State<OtSurgeryRecordScreen> {
   OtSurgeryFormData? _formData;
   bool _saving = false;
 
-  bool get _canLensRecord => PermissionService.instance.can(Perm.otLensRecord);
-  bool get _canMedsTakehome =>
-      PermissionService.instance.can(Perm.otMedsTakehome);
 
   final _otRoomCtrl = TextEditingController();
   final _complicationNotesCtrl = TextEditingController();
@@ -597,7 +592,6 @@ class _OtSurgeryRecordScreenState extends State<OtSurgeryRecordScreen> {
                   ),
                 ],
               ),
-              if (_canLensRecord)
                 AppFormCard(
                   icon: Icons.remove_red_eye_outlined,
                   title: 'C. Lens Selection',
@@ -732,7 +726,6 @@ class _OtSurgeryRecordScreenState extends State<OtSurgeryRecordScreen> {
                     ),
                   ],
                 ),
-              if (_canMedsTakehome)
                 AppFormCard(
                   icon: Icons.medication_outlined,
                   title: 'D. In-Ward Medicines',

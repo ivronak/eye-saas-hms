@@ -22,13 +22,20 @@ class SignGridPopover extends StatefulWidget {
   /// in the header when set.
   final String? title;
 
-  const SignGridPopover({super.key, required this.items, required this.current, required this.onApply, required this.onClose, this.title});
+  /// Web shows ONLY the green "+" button for a few fields (ST Near ADD) — no
+  /// minus. When true the Minus tile is not offered and the sign is fixed to +.
+  final bool positiveOnly;
+
+  const SignGridPopover({super.key, required this.items, required this.current, required this.onApply, required this.onClose, this.title, this.positiveOnly = false});
 
   @override
   State<SignGridPopover> createState() => _SignGridPopoverState();
 }
 
 class _SignGridPopoverState extends State<SignGridPopover> {
+  // Minus = red, Plus = green — same colours as web's red "−" / green "+" buttons.
+  Color _signColor(String s) => s == '-' ? AppColors.red : AppColors.green;
+
   late String _sign;
   late String _selected;
   final _customCtrl = TextEditingController();
@@ -36,7 +43,7 @@ class _SignGridPopoverState extends State<SignGridPopover> {
   @override
   void initState() {
     super.initState();
-    _sign = widget.current.startsWith('-') ? '-' : '+';
+    _sign = widget.positiveOnly ? '+' : (widget.current.startsWith('-') ? '-' : '+');
     _selected = widget.current;
   }
 
@@ -73,7 +80,7 @@ class _SignGridPopoverState extends State<SignGridPopover> {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 10),
           child: Row(children: [
-            for (final s in ['-', '+'])
+            for (final s in widget.positiveOnly ? const ['+'] : const ['-', '+'])
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 2),
@@ -88,8 +95,8 @@ class _SignGridPopoverState extends State<SignGridPopover> {
                     }),
                     child: Container(
                       padding: const EdgeInsets.symmetric(vertical: 8),
-                      decoration: BoxDecoration(color: _sign == s ? AppColors.primary : Colors.white, borderRadius: BorderRadius.circular(AppRadius.sm), border: Border.all(color: _sign == s ? AppColors.primary : AppColors.primaryA20)),
-                      child: Text(s == '-' ? 'Minus (−)' : 'Plus (+)', textAlign: TextAlign.center, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: _sign == s ? Colors.white : AppColors.primary)),
+                      decoration: BoxDecoration(color: _sign == s ? _signColor(s) : Colors.white, borderRadius: BorderRadius.circular(AppRadius.sm), border: Border.all(color: _sign == s ? _signColor(s) : _signColor(s).withValues(alpha: 0.45))),
+                      child: Text(s == '-' ? 'Minus (−)' : 'Plus (+)', textAlign: TextAlign.center, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: _sign == s ? Colors.white : _signColor(s))),
                     ),
                   ),
                 ),

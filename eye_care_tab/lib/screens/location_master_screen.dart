@@ -102,7 +102,7 @@ class _LocationMasterScreenState extends State<LocationMasterScreen> {
   }
 
   Future<void> _openDialog({LocationItem? item}) async {
-    final saved = await showDialog<bool>(
+    final saved = await showAppDialog<bool>(
       context: context,
       builder: (_) =>
           _LocationDialog(item: item, accentColor: widget.accentColor),

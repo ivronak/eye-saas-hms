@@ -507,7 +507,7 @@ class _RoleEditorPaneState extends State<_RoleEditorPane> {
     final hexCtrl = TextEditingController(
       text: _colorHex.replaceFirst('#', ''),
     );
-    final picked = await showDialog<String>(
+    final picked = await showAppDialog<String>(
       context: context,
       builder: (dCtx) => StatefulBuilder(
         builder: (dCtx, ss) {
@@ -755,61 +755,13 @@ class _RoleEditorPaneState extends State<_RoleEditorPane> {
   }
 
   Widget _buildHeader() {
-    return Row(
-      children: [
-        IconButton(
-          icon: Icon(Icons.close_rounded, color: AppColors.primary),
-          onPressed: widget.onCancel,
-          tooltip: 'Cancel',
-        ),
-        Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [AppColors.primary, AppColors.blueLight],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(AppRadius.md),
-          ),
-          child: Icon(
-            _isEdit ? Icons.edit_rounded : Icons.add_moderator_rounded,
-            color: Colors.white,
-            size: 20,
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                _isEdit ? 'Edit Role' : 'New Role',
-                style: TextStyle(
-                  color: AppColors.primary,
-                  fontSize: 17,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-              Text(
-                'Name, description and module permissions',
-                style: TextStyle(color: AppColors.textSecondary, fontSize: 11),
-              ),
-            ],
-          ),
-        ),
-        if (widget.editable)
-          SizedBox(
-            width: 140,
-            child: AppPrimaryButton(
-              label: 'Save',
-              loading: _saving,
-              onPressed: _save,
-            ),
-          ),
-      ],
-    );
+    return AppPaneHeader(
+        icon: _isEdit ? Icons.edit_rounded : Icons.add_moderator_rounded,
+        title: _isEdit ? 'Edit Role' : 'New Role',
+        subtitle: 'Name, description and module permissions',
+        trailing: AppPrimaryButton(label: 'Save', icon: Icons.check_rounded, loading: _saving, onPressed: _save),
+        onClose: widget.onCancel,
+      );
   }
 
   Widget _buildNameCard() {

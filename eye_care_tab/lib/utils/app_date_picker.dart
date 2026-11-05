@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_radius.dart';
 import 'date_format.dart';
+import '../widgets/app_dialog.dart';
 
 /// Centered calendar card. The month grid stays on screen, and a date can
 /// be typed in the field under it. That field does not replace the calendar.
@@ -15,7 +16,7 @@ Future<DateTime?> showAppDatePicker({
   required DateTime lastDate,
   TransitionBuilder? builder,
 }) {
-  return showDialog<DateTime>(
+  return showAppDialog<DateTime>(
     context: context,
     barrierColor: Colors.black54,
     builder: (ctx) {
@@ -33,7 +34,7 @@ Future<DateTimeRange?> showAppDateRangePicker({
   TransitionBuilder? builder,
 }) {
   final start = initialDateRange?.start ?? DateTime.now();
-  return showDialog<DateTimeRange>(
+  return showAppDialog<DateTimeRange>(
     context: context,
     barrierColor: Colors.black54,
     builder: (ctx) {

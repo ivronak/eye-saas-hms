@@ -106,7 +106,7 @@ class _OtSlotMasterScreenState extends State<OtSlotMasterScreen> {
   }
 
   Future<void> _openDialog({OtSlotItem? item}) async {
-    final saved = await showDialog<bool>(
+    final saved = await showAppDialog<bool>(
       context: context,
       builder: (_) =>
           _OtSlotDialog(item: item, accentColor: widget.accentColor),

@@ -11,7 +11,7 @@ import 'form_kit.dart';
 /// the created [LocationOption], or null when cancelled. City and State are
 /// required, matching web's `reception-patient-form.js`.
 Future<LocationOption?> showAddCityDialog(BuildContext context) =>
-    showDialog<LocationOption>(context: context, builder: (_) => const _AddCityDialog());
+    showAppDialog<LocationOption>(context: context, builder: (_) => const _AddCityDialog());
 
 class _AddCityDialog extends StatefulWidget {
   const _AddCityDialog();

@@ -78,24 +78,15 @@ class _OtWardQueueScreenState extends State<OtWardQueueScreen>
   int _perPage = 10;
   int _page = 1;
 
-  // Web parity (`ward.blade.php`'s Dilate column) — a live mm:ss countdown
-  // to each row's dilation-unlock time, ticking every second via a plain
-  // rebuild (cheap — no refetch) rather than a per-row Timer.
-  Timer? _dilateTicker;
-
   @override
   void initState() {
     super.initState();
     _load();
-    _dilateTicker = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (mounted) setState(() {});
-    });
   }
 
   @override
   void dispose() {
     _searchCtrl.dispose();
-    _dilateTicker?.cancel();
     super.dispose();
   }
 
@@ -230,7 +221,7 @@ class _OtWardQueueScreenState extends State<OtWardQueueScreen>
                 SegmentedPillToggle<String>(
                   options: const [
                     (value: 'queue', label: 'Queue'),
-                    (value: 'history', label: 'All'),
+                    (value: 'history', label: 'Completed'),
                   ],
                   selected: _filter,
                   onChanged: _setFilter,
@@ -281,7 +272,7 @@ class _OtWardQueueScreenState extends State<OtWardQueueScreen>
     ScaledTableColumn('PATIENT NAME', 170, grow: true),
     ScaledTableColumn('PHONE', 120),
     ScaledTableColumn('STATUS', 150),
-    ScaledTableColumn('DILATE', 110),
+    ScaledTableColumn('DOSE', 110),
     ScaledTableColumn('PAYMENT', 110),
     ScaledTableColumn('ACTIONS', 340, hug: true),
   ];
@@ -377,7 +368,7 @@ class _OtWardQueueScreenState extends State<OtWardQueueScreen>
           ),
         ),
       ),
-      _dilateCell(item),
+      _doseCell(item),
       ps != null
           ? Align(
               alignment: Alignment.centerLeft,
@@ -431,57 +422,27 @@ class _OtWardQueueScreenState extends State<OtWardQueueScreen>
     ];
   }
 
-  Widget _dilateCell(OtBookingSummary item) {
-    final unlockAt = _dilateUnlockAt(item);
-    if (unlockAt == null) {
+  Widget _doseCell(OtBookingSummary item) {
+    final doses = item.dilationEntries.length;
+    if (doses == 0) {
       return const Text('—', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.textPrimary));
     }
-    final ready = !unlockAt.isAfter(DateTime.now());
-    final color = ready ? AppColors.green : AppColors.orange;
     return Align(
       alignment: Alignment.centerLeft,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-        decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(AppRadius.full)),
+        decoration: BoxDecoration(color: AppColors.blue.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(AppRadius.full)),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.water_drop_outlined, size: 12, color: color),
+            const Icon(Icons.water_drop_outlined, size: 12, color: AppColors.blue),
             const SizedBox(width: 4),
-            Text(_dilateCountdownLabel(unlockAt), style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: color)),
+            Text('$doses', style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, color: AppColors.blue)),
           ],
         ),
       ),
     );
   }
-}
-
-// Web parity (`ward.blade.php`'s Dilate column) — the latest logged dose
-// with dilate='Yes' and a dilation_time set, resolved to the actual
-// wall-clock moment it unlocks (administered_at + dilation_time minutes).
-// Null when no such dose has been logged.
-DateTime? _dilateUnlockAt(OtBookingSummary item) {
-  OtEyeDropEntry? latest;
-  DateTime? latestAt;
-  for (final d in item.dilationEntries) {
-    if (d.dilate != 'Yes' || d.dilationTime == null) continue;
-    final at = DateTime.tryParse(d.administeredAt ?? '');
-    if (at == null) continue;
-    if (latestAt == null || at.isAfter(latestAt)) {
-      latest = d;
-      latestAt = at;
-    }
-  }
-  if (latest == null || latestAt == null) return null;
-  return latestAt.add(Duration(minutes: latest.dilationTime!));
-}
-
-String _dilateCountdownLabel(DateTime unlockAt) {
-  final diff = unlockAt.difference(DateTime.now());
-  if (diff.isNegative) return 'Ready';
-  final m = diff.inMinutes;
-  final s = diff.inSeconds.remainder(60);
-  return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
 }
 
 // ── Ward detail pane (embedded in the detail pane, not a full screen) ──────
@@ -518,8 +479,6 @@ class _WardDetailPaneState extends State<_WardDetailPane> {
   bool _loading = true;
   String? _loadError;
 
-  String? _currentOtStatus;
-  bool _sendingReady = false;
 
   // ── Vitals form — always visible, pre-filled from the latest save ───────
   late final TextEditingController _bpCtrl,
@@ -538,29 +497,19 @@ class _WardDetailPaneState extends State<_WardDetailPane> {
   // ── Eye-drop form (add new dose) ─────────────────────────────────────
   final _doseCtrl = TextEditingController();
   final _remarksCtrl = TextEditingController();
-  final _dilationTimeCtrl = TextEditingController();
   String? _medicineName;
   String _eye = 'RE';
   DateTime _administeredAt = toHospitalTime(DateTime.now());
-  // Web pull 2026-10-10 — "Dilate?" Yes/No; dilation time (minutes) is
-  // required only when Yes.
-  bool _dilate = false;
   bool _savingDrop = false;
-  String? _medicineError, _doseError, _dilationTimeError;
+  String? _medicineError, _doseError;
 
   bool get _canWriteVitals => PermissionService.instance.can(Perm.otPreopEntry);
   bool get _canWriteDrops =>
       PermissionService.instance.can(Perm.otDilationTrack);
-  // Web gates the whole ward page — including "send to OT Assistant" — by
-  // ot_ward_entry alone; the API's mark-ready route enforces the same key.
-  // ot_surgery_ready is a different feature (OT Assistant's own "ready to
-  // operate" action) and must not gate this button.
-  bool get _canSurgeryReady => PermissionService.instance.can(Perm.otWardEntry);
 
   @override
   void initState() {
     super.initState();
-    _currentOtStatus = widget.initialOtStatus;
     _bpCtrl = TextEditingController();
     _pulseCtrl = TextEditingController();
     _rbsCtrl = TextEditingController();
@@ -581,7 +530,6 @@ class _WardDetailPaneState extends State<_WardDetailPane> {
       _hba1cCtrl,
       _doseCtrl,
       _remarksCtrl,
-      _dilationTimeCtrl,
     ]) {
       c.dispose();
     }
@@ -645,7 +593,7 @@ class _WardDetailPaneState extends State<_WardDetailPane> {
     try {
       // Card 1 is clinical vitals only — the current pre_op_status is
       // carried forward unchanged from the Status section's own state.
-      final status = await OtWardService.instance.storeVitals(
+      await OtWardService.instance.storeVitals(
         widget.bookingId,
         {
           'bp': _bpCtrl.text.trim().isEmpty ? null : _bpCtrl.text.trim(),
@@ -662,7 +610,6 @@ class _WardDetailPaneState extends State<_WardDetailPane> {
       );
       if (!mounted) return;
       setState(() {
-        _currentOtStatus = status;
         _savingVitals = false;
       });
       showAppSnackBar(context, 'Vitals saved.', isSuccess: true);
@@ -701,8 +648,15 @@ class _WardDetailPaneState extends State<_WardDetailPane> {
             'assign_staff': true,
           });
       if (!mounted) return;
+      // Web pull 2026-10-17: Save Status on "Ready for OT" now hands the
+      // patient straight to the OT Assistant (the separate READY button is
+      // gone) and sends the user back to the dashboard.
+      if (status == 'ready') {
+        showAppSnackBar(context, 'Status saved. Patient assigned and sent to OT Assistant.', isSuccess: true);
+        widget.onClose();
+        return;
+      }
       setState(() {
-        _currentOtStatus = status;
         _savingStatus = false;
       });
       showAppSnackBar(context, 'Status saved.', isSuccess: true);
@@ -721,17 +675,13 @@ class _WardDetailPaneState extends State<_WardDetailPane> {
 
   Future<void> _logEyeDrop() async {
     final dose = int.tryParse(_doseCtrl.text.trim());
-    final dilationTime = int.tryParse(_dilationTimeCtrl.text.trim());
     setState(() {
       _medicineError = _medicineName == null ? 'Required' : null;
       _doseError = (dose == null || dose < 1 || dose > 20)
           ? 'Must be 1-20'
           : null;
-      _dilationTimeError = _dilate && (dilationTime == null || dilationTime < 1 || dilationTime > 180)
-          ? 'Enter the dilation time (minutes)'
-          : null;
     });
-    if (_medicineError != null || _doseError != null || _dilationTimeError != null) return;
+    if (_medicineError != null || _doseError != null) return;
 
     setState(() => _savingDrop = true);
     try {
@@ -744,8 +694,6 @@ class _WardDetailPaneState extends State<_WardDetailPane> {
         remarks: _remarksCtrl.text.trim().isEmpty
             ? null
             : _remarksCtrl.text.trim(),
-        dilate: _dilate ? 'Yes' : 'No',
-        dilationTime: _dilate ? dilationTime : null,
       );
       if (!mounted) return;
       setState(() {
@@ -753,8 +701,6 @@ class _WardDetailPaneState extends State<_WardDetailPane> {
         _remarksCtrl.clear();
         _medicineName = null;
         _administeredAt = toHospitalTime(DateTime.now());
-        _dilate = false;
-        _dilationTimeCtrl.clear();
       });
       showAppSnackBar(context, 'Dose logged.', isSuccess: true);
       await _load();
@@ -770,85 +716,19 @@ class _WardDetailPaneState extends State<_WardDetailPane> {
     }
   }
 
-  Future<void> _sendToOtAssistant() async {
-    setState(() => _sendingReady = true);
-    try {
-      final status = await OtWardService.instance.markReady(widget.bookingId);
-      if (mounted) {
-        setState(() {
-          _currentOtStatus = status;
-          _sendingReady = false;
-        });
-        showAppSnackBar(
-          context,
-          'Patient is ready and handed off to OT Assistant',
-          isSuccess: true,
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() => _sendingReady = false);
-        showAppSnackBar(
-          context,
-          e.toString().replaceFirst('Exception: ', ''),
-          isError: true,
-        );
-      }
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            IconButton(
-              icon: Icon(Icons.close_rounded, color: AppColors.primary),
-              onPressed: widget.onClose,
-              tooltip: 'Close',
-            ),
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: AppColors.primaryA10,
-                borderRadius: BorderRadius.circular(AppRadius.md),
-              ),
-              child: Icon(
-                Icons.bed_rounded,
-                color: AppColors.primary,
-                size: 20,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Ward Entry',
-                    style: TextStyle(
-                      color: AppColors.primary,
-                      fontSize: 17,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  Text(
-                    _header != null
+        AppPaneHeader(
+        icon: Icons.bed_rounded,
+        title: 'Ward Entry',
+        subtitle: _header != null
                         ? '${_header!.patientName} · UHID ${_header!.uhid}${_header!.surgeryType != null ? ' · ${_header!.surgeryType}' : ''}'
                         : widget.patientName,
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 11,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+        onClose: widget.onClose,
+      ),
         const SizedBox(height: 16),
         Expanded(
           child: _loading
@@ -859,7 +739,6 @@ class _WardDetailPaneState extends State<_WardDetailPane> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _buildReadyBanner(),
                       _buildVitalsPanel(),
                       const SizedBox(height: 16),
                       _buildEyeDropsPanel(),
@@ -870,83 +749,6 @@ class _WardDetailPaneState extends State<_WardDetailPane> {
                 ),
         ),
       ],
-    );
-  }
-
-  Widget _buildReadyBanner() {
-    final status = _currentOtStatus;
-    if (status == null) return const SizedBox.shrink();
-    final eligibleStatuses = {'payment_verified', 'in_ward'};
-    final preOpReady = _vitals?.preOpStatus == 'ready_for_surgery';
-    final showButton = eligibleStatuses.contains(status) && preOpReady;
-    Color bg;
-    Color fg;
-    String label;
-    if (status == 'ready') {
-      bg = AppColors.green.withValues(alpha: 0.12);
-      fg = AppColors.green;
-      label = 'READY — sent to OT Assistant';
-    } else if (eligibleStatuses.contains(status)) {
-      bg = const Color(0xFFF1F5F9);
-      fg = AppColors.textSecondary;
-      label = preOpReady
-          ? 'Ready to send to OT Assistant?'
-          : 'Save Ready + OT Assistant first';
-    } else {
-      bg = AppColors.orangeA12;
-      fg = AppColors.orange;
-      label = 'Current status: ${status.toUpperCase()}';
-    }
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(AppRadius.md),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            status == 'ready' ? Icons.check_circle_outline : Icons.info_outline,
-            size: 18,
-            color: fg,
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              label,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-                color: fg,
-              ),
-            ),
-          ),
-          if (showButton && _canSurgeryReady)
-            ElevatedButton.icon(
-              onPressed: _sendingReady ? null : _sendToOtAssistant,
-              icon: _sendingReady
-                  ? const SizedBox(
-                      width: 14,
-                      height: 14,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : const Icon(Icons.send_rounded, size: 15),
-              label: const Text(
-                'READY',
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-              ),
-            ),
-        ],
-      ),
     );
   }
 
@@ -1226,15 +1028,6 @@ class _WardDetailPaneState extends State<_WardDetailPane> {
                                 fontWeight: FontWeight.w700,
                               ),
                             ),
-                            if (d.dilate == 'Yes')
-                              Text(
-                                'Dilated${d.dilationTime != null ? ' · ${d.dilationTime} mins' : ''}',
-                                style: const TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.tealDark,
-                                ),
-                              ),
                             if (d.remarks != null && d.remarks!.isNotEmpty)
                               Text(
                                 d.remarks!,
@@ -1352,58 +1145,6 @@ class _WardDetailPaneState extends State<_WardDetailPane> {
               decoration: appFieldDecoration('Remarks'),
             ),
             const SizedBox(height: 14),
-            // Web pull 2026-10-10 — "Dilate?" Yes/No; dilation time
-            // (minutes) only required/shown when Yes.
-            AppFormRow(
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Dilate',
-                      style: TextStyle(
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                    const SizedBox(height: 7),
-                    Row(
-                      children: [
-                        ChoiceChip(
-                          label: const Text('Yes'),
-                          selected: _dilate,
-                          onSelected: (_) => setState(() {
-                            _dilate = true;
-                            _dilationTimeError = null;
-                          }),
-                        ),
-                        const SizedBox(width: 8),
-                        ChoiceChip(
-                          label: const Text('No'),
-                          selected: !_dilate,
-                          onSelected: (_) => setState(() {
-                            _dilate = false;
-                            _dilationTimeCtrl.clear();
-                            _dilationTimeError = null;
-                          }),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                if (_dilate)
-                  TextFormField(
-                    controller: _dilationTimeCtrl,
-                    keyboardType: TextInputType.number,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                    decoration: appFieldDecoration('Dilation Time', hint: 'mins').copyWith(errorText: _dilationTimeError),
-                  )
-                else
-                  const SizedBox.shrink(),
-              ],
-            ),
-            const SizedBox(height: 14),
             SizedBox(
               width: double.infinity,
               child: AppPrimaryButton(
@@ -1432,7 +1173,6 @@ Future<void> openOtWardEntryPane(
   return showPaneDialog<void>(
     context,
     wide: true,
-    barrierDismissible: false,
     builder: (dCtx) => _WardDetailPane(
       key: ValueKey('ward-$bookingId'),
       bookingId: bookingId,

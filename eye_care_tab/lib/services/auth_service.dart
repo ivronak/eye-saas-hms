@@ -102,6 +102,66 @@ class AuthService {
     }
   }
 
+  // ── Forgot password ────────────────────────────────────────────────
+  // POST /api/v1/forgot-password — same flow as the web page: the server
+  // e-mails a reset link, the new password is set on the web reset page.
+  // No slug needed (the server resolves the account from email/phone).
+
+  Future<({bool success, String message, String? email})> forgotPassword(
+      String login) async {
+    try {
+      final response = await http
+          .post(
+            Uri.parse('${AppConfig.apiBaseUrl}/forgot-password'),
+            headers: _baseHeaders,
+            body: jsonEncode({'login': login.trim()}),
+          )
+          .timeout(AppConfig.requestTimeout);
+
+      final body = jsonDecode(response.body) as Map<String, dynamic>;
+      if (response.statusCode == 200 && body['success'] == true) {
+        final data = body['data'] as Map<String, dynamic>?;
+        return (
+          success: true,
+          message: body['message'] as String? ?? 'Password reset link sent.',
+          email: data?['email'] as String?,
+        );
+      }
+      var message = body['message'] as String? ?? '';
+      final errors = body['errors'];
+      if (response.statusCode == 422 && errors is Map && errors.isNotEmpty) {
+        final first = errors.values.first;
+        message = (first is List ? first.first : first).toString();
+      } else if (response.statusCode >= 500 && message.isEmpty) {
+        message = 'Server error. Please try again later.';
+      }
+      return (
+        success: false,
+        message: message.isEmpty ? 'Could not send reset link.' : message,
+        email: null,
+      );
+    } on TimeoutException {
+      return (
+        success: false,
+        message: 'Request timed out. Please check your connection.',
+        email: null,
+      );
+    } on SocketException {
+      return (
+        success: false,
+        message: 'No internet connection. Please try again.',
+        email: null,
+      );
+    } catch (e) {
+      debugPrint('[AuthService] forgotPassword ERROR: $e');
+      return (
+        success: false,
+        message: 'Something went wrong. Please try again.',
+        email: null,
+      );
+    }
+  }
+
   // ── Login ──────────────────────────────────────────────────────────
   // Step 1: find-hospital to discover slug
   // Step 2: POST /{slug}/auth/login with credentials

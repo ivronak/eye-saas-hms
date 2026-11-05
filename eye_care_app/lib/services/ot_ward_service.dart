@@ -43,7 +43,7 @@ class OtWardService with AuthenticatedService {
     return list.map((e) => OtEyeDropEntry.fromJson(e as Map<String, dynamic>)).toList();
   }
 
-  Future<OtEyeDropEntry> addEyeDrop(int bookingId, {required String medicineName, required String eye, required int doseNumber, String? administeredAt, String? remarks, String? dilate, int? dilationTime}) async {
+  Future<OtEyeDropEntry> addEyeDrop(int bookingId, {required String medicineName, required String eye, required int doseNumber, String? administeredAt, String? remarks}) async {
     final res = await http
         .post(
           Uri.parse('$_base/ot/bookings/$bookingId/eye-drops'),
@@ -54,8 +54,6 @@ class OtWardService with AuthenticatedService {
             'dose_number': doseNumber,
             if (administeredAt != null) 'administered_at': administeredAt,
             'remarks': remarks,
-            if (dilate != null) 'dilate': dilate,
-            if (dilationTime != null) 'dilation_time': dilationTime,
           }),
         )
         .timeout(AppConfig.requestTimeout);

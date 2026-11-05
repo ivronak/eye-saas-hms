@@ -95,7 +95,7 @@ class _ReferrerMasterScreenState extends State<ReferrerMasterScreen> {
   }
 
   Future<void> _openDialog({ReferrerItem? item}) async {
-    final saved = await showDialog<bool>(
+    final saved = await showAppDialog<bool>(
       context: context,
       builder: (_) =>
           _ReferrerDialog(item: item, accentColor: widget.accentColor),

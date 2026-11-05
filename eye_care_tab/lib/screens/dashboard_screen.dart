@@ -664,7 +664,6 @@ class _DashboardScreenState extends State<DashboardScreen>
   Future<void> _openWalkInQuick() async {
     await showPaneDialog<void>(
       context,
-      barrierDismissible: false,
       builder: (dCtx) => PatientFormScreen(
         mode: PatientFormMode.addWalkIn,
         user: widget.user,
@@ -681,7 +680,6 @@ class _DashboardScreenState extends State<DashboardScreen>
   Future<void> _openPhoneQuick() async {
     await showPaneDialog<void>(
       context,
-      barrierDismissible: false,
       builder: (dCtx) => PatientFormScreen(
         mode: PatientFormMode.addPhone,
         user: widget.user,
@@ -698,7 +696,6 @@ class _DashboardScreenState extends State<DashboardScreen>
   Future<void> _openOtAppointmentQuick() async {
     await showPaneDialog<void>(
       context,
-      barrierDismissible: false,
       builder: (dCtx) => OtAppointmentFormPane(
         item: null,
         onSaved: () {
@@ -2739,7 +2736,7 @@ class _TodayPatientsWidgetState extends State<_TodayPatientsWidget> {
   }
 
   Future<void> _openCheckIn(Patient p) async {
-    await showDialog<void>(
+    await showAppDialog<void>(
       context: context,
       builder: (dCtx) => PatientCheckinScreen(
         user: widget.user,

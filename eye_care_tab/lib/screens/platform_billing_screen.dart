@@ -190,7 +190,7 @@ class _PaymentsTabState extends State<_PaymentsTab> {
   }
 
   void _showRecordPaymentDialog() {
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (_) => _RecordPaymentDialog(onSaved: () => _load(page: 1)),
     );

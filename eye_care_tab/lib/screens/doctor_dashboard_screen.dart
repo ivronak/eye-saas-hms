@@ -21,6 +21,7 @@ import '../widgets/exam/dilation_lock.dart';
 import '../widgets/skeleton.dart';
 import '../widgets/table_row_action.dart';
 import 'doctor_ot_list_screen.dart';
+import 'ot_assistant_dashboard_screen.dart' show openOtSurgeryRecordingPane;
 import 'latest_exam_view_screen.dart';
 import 'primary_exam_screen.dart';
 import 'secondary_exam_screen.dart';
@@ -72,9 +73,8 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> implement
   // The switch itself lives in the app header (DoctorDashTabSwitch); the
   // selection is shared through doctorDashTab.
   String get _activeDashTab => doctorDashTab.value;
-  // Right-hand OT panel: Ward Management list (default) or, via its header
-  // button, the patients this doctor handed to an OT assistant.
-  bool _showOtAssistant = false;
+  // "Ready for Surgery" panel (toggle button above the OT lists).
+  bool _showReadyPanel = false;
   String _otPendingSearch = '';
   String _otCompletedSearch = '';
   int _otPendingPageSize = 10;
@@ -251,11 +251,14 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> implement
               );
             },
           )
-        else
+        else ...[
+          _buildReadyToggle(data),
+          if (_showReadyPanel) ...[const SizedBox(height: 12), _buildReadyPanel(data)],
+          const SizedBox(height: 16),
           LayoutBuilder(
             builder: (context, constraints) {
               final pending = _buildOtQueueTable(isPending: true, items: data.otPaymentPendingQueue);
-              final completed = _buildOtQueueTable(isPending: false, items: _showOtAssistant ? data.otAssistantQueue : data.otWardQueue);
+              final completed = _buildOtQueueTable(isPending: false, items: data.otWardQueue);
               if (constraints.maxWidth < AppBreakpoints.medium) {
                 return Column(children: [pending, const SizedBox(height: 16), completed]);
               }
@@ -269,6 +272,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> implement
               );
             },
           ),
+        ],
       ],
     );
   }
@@ -372,7 +376,7 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> implement
           // display here stops showing it, matching web exactly.
           if (_activeDashTab == 'opd')
             _overviewBar(const Color(0xFF0F4F86), [
-              ('C', '${data.tenantTodayPatients}'),
+              ('C', '${data.tenantTodayPendingWalkin}'),
               ('PC', '${data.tenantTodayPrimary}'),
               ('SC', '${data.tenantTodaySecondary}'),
             ])
@@ -944,7 +948,75 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> implement
   void _openOtList(int doctorId, String doctorName) =>
       openDoctorOpList(context, doctorId: doctorId, doctorName: doctorName);
 
-  Widget _otDataRow(int index, OtQueueItem item, int doctorId, String doctorName) {
+  Future<void> _operate(OtQueueItem item) => openOtSurgeryRecordingPane(
+        context,
+        bookingId: item.id,
+        patientName: item.patientName,
+        onSaved: _load,
+      );
+
+  // Web pull 2026-10-17 — "Ready for Surgery" toggle revealing this doctor's
+  // own Ready-for-OT patients, with an Operate action (same Surgery
+  // Recording Form the OT Assistant uses) so the doctor can record the
+  // surgery themselves.
+  Widget _buildReadyToggle(DoctorDashboardData data) {
+    final count = data.otReadyQueue.length;
+    return Align(
+      alignment: Alignment.centerRight,
+      child: OutlinedButton.icon(
+        onPressed: () => setState(() => _showReadyPanel = !_showReadyPanel),
+        style: OutlinedButton.styleFrom(
+          foregroundColor: _showReadyPanel ? Colors.white : const Color(0xFF0D9488),
+          backgroundColor: _showReadyPanel ? const Color(0xFF0D9488) : Colors.transparent,
+          side: const BorderSide(color: Color(0xFF0D9488)),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.md)),
+        ),
+        icon: const Icon(Icons.content_cut_rounded, size: 16),
+        label: Row(mainAxisSize: MainAxisSize.min, children: [
+          const Text('Ready for Surgery', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800)),
+          if (count > 0) ...[
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+              decoration: BoxDecoration(color: _showReadyPanel ? Colors.white : const Color(0xFF0D9488), borderRadius: BorderRadius.circular(AppRadius.full)),
+              child: Text('$count', style: TextStyle(color: _showReadyPanel ? const Color(0xFF0D9488) : Colors.white, fontSize: 11, fontWeight: FontWeight.w800)),
+            ),
+          ],
+        ]),
+      ),
+    );
+  }
+
+  Widget _buildReadyPanel(DoctorDashboardData data) {
+    final items = data.otReadyQueue;
+    final doctorId = _viewingDoctorId ?? widget.user.id;
+    final doctorName = _data?.viewingDoctor?.name ?? widget.user.name;
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(AppRadius.lg),
+        border: Border.all(color: const Color(0xFFCDE5F5)),
+        boxShadow: [BoxShadow(color: AppColors.primary.withValues(alpha: 0.07), blurRadius: 10, offset: const Offset(0, 3))],
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+          width: double.infinity,
+          color: const Color(0xFF0D9488),
+          child: Text('Ready for Surgery', style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w800)),
+        ),
+        _otTableHeaderRow(),
+        if (items.isEmpty)
+          const Padding(padding: EdgeInsets.symmetric(vertical: 24), child: Center(child: Text('No patients ready for surgery.', style: TextStyle(fontSize: 14, color: AppColors.textSecondary))))
+        else
+          ...items.asMap().entries.map((e) => _otDataRow(e.key, e.value, doctorId, doctorName, operate: true)),
+      ]),
+    );
+  }
+
+  Widget _otDataRow(int index, OtQueueItem item, int doctorId, String doctorName, {bool operate = false}) {
     return Container(
       decoration: BoxDecoration(border: Border(bottom: BorderSide(color: const Color(0xFFCDE5F5).withValues(alpha: 0.5)))),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -954,8 +1026,6 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> implement
           Text(item.patientName, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.textPrimary), maxLines: 1, overflow: TextOverflow.ellipsis),
           if (_patientMeta(item.age, item.gender, item.city ?? '').isNotEmpty)
             Text(_patientMeta(item.age, item.gender, item.city ?? ''), maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: AppColors.textSecondary)),
-          if (item.assistantName != null && item.assistantName!.isNotEmpty)
-            Text('Asst: ${item.assistantName}', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF0D9488))),
         ]),
         Center(
           child: Container(
@@ -964,15 +1034,17 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> implement
             child: Text(item.statusLabel, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700)),
           ),
         ),
-        item.isConsultPending
-            ? _examBtn('Review', () => _openOtList(doctorId, doctorName))
-            : _viewBtn(() => _openOtList(doctorId, doctorName)),
+        operate
+            ? (PermissionService.instance.can(Perm.otSurgeryRecord) ? _examBtn('Operate', () => _operate(item)) : const SizedBox.shrink())
+            : item.isConsultPending
+                ? _examBtn('Review', () => _openOtList(doctorId, doctorName))
+                : _viewBtn(() => _openOtList(doctorId, doctorName)),
       ]),
     );
   }
 
   Widget _buildOtQueueTable({required bool isPending, required List<OtQueueItem> items}) {
-    final title = isPending ? 'Payment Pending Patients' : (_showOtAssistant ? 'OT Assistant Patients' : 'Ward Management Patients');
+    final title = isPending ? 'Payment Pending Patients' : 'Ward Management Patients';
     final search = (isPending ? _otPendingSearch : _otCompletedSearch).trim().toLowerCase();
     final pageSize = isPending ? _otPendingPageSize : _otCompletedPageSize;
     final page = isPending ? _otPendingPage : _otCompletedPage;
@@ -1006,30 +1078,10 @@ class _DoctorDashboardScreenState extends State<DoctorDashboardScreen> implement
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
-          color: isPending ? AppColors.primary : const Color(0xFF0D9488),
+          color: const Color(0xFF0D9488),
           child: Row(children: [
             Text(title, style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w800)),
             const Spacer(),
-            if (!isPending) ...[
-              PressScaleWrapper(
-                onTap: () => setState(() {
-                  _showOtAssistant = !_showOtAssistant;
-                  _otCompletedPage = 1;
-                  _otCompletedSearch = '';
-                }),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(AppRadius.xl)),
-                  child: Text(
-                    _showOtAssistant
-                        ? 'Ward (${_data?.otWardQueue.length ?? 0})'
-                        : 'OT Assistant (${_data?.otAssistantQueue.length ?? 0})',
-                    style: const TextStyle(color: Color(0xFF0D9488), fontSize: 12, fontWeight: FontWeight.w800),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-            ],
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
               decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(AppRadius.xl)),

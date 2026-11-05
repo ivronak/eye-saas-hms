@@ -28,7 +28,6 @@ import '../utils/app_date_picker.dart';
 Future<void> openOtAppointmentEditDialog(BuildContext context, OtAppointmentItem item, {required VoidCallback onSaved}) {
   return showPaneDialog<void>(
     context,
-    barrierDismissible: false,
     builder: (dCtx) => OtAppointmentFormPane(
       key: ValueKey('ot_appt_form_edit_${item.id}'),
       item: item,
@@ -883,53 +882,14 @@ class _OtAppointmentFormPaneState extends State<OtAppointmentFormPane> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            IconButton(
-              icon: Icon(Icons.close_rounded, color: AppColors.primary),
-              onPressed: widget.onCancel,
-              tooltip: 'Cancel',
-            ),
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: AppColors.primaryA10,
-                borderRadius: BorderRadius.circular(AppRadius.md),
-              ),
-              child: Icon(
-                isEdit ? Icons.edit_rounded : Icons.event_note_rounded,
-                color: AppColors.primary,
-                size: 20,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    isEdit ? 'Edit Appointment' : 'New Appointment',
-                    style: TextStyle(
-                      color: AppColors.primary,
-                      fontSize: 17,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  Text(
-                    isEdit
+        AppPaneHeader(
+        icon: isEdit ? Icons.edit_rounded : Icons.event_note_rounded,
+        title: isEdit ? 'Edit Appointment' : 'New Appointment',
+        subtitle: isEdit
                         ? 'Update appointment details'
                         : 'Pre-registration — patient hasn\'t arrived yet',
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 11,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+        onClose: widget.onCancel,
+      ),
         const SizedBox(height: 16),
         Expanded(
           child: _loadingForm

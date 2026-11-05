@@ -19,7 +19,7 @@ Future<bool> showAppConfirmDialog(
   bool barrierDismissible = true,
 }) async {
   final accent = color ?? (destructive ? AppColors.red : null);
-  return await showDialog<bool>(
+  return await showAppDialog<bool>(
         context: context,
         barrierDismissible: barrierDismissible,
         builder: (ctx) => AppDialog(

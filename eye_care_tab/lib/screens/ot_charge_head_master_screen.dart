@@ -92,7 +92,7 @@ class _OtChargeHeadMasterScreenState extends State<OtChargeHeadMasterScreen> {
   }
 
   Future<void> _openDialog({OtChargeHeadItem? item}) async {
-    final saved = await showDialog<bool>(
+    final saved = await showAppDialog<bool>(
       context: context,
       builder: (_) =>
           _OtChargeHeadDialog(item: item, accentColor: widget.accentColor),

@@ -3202,9 +3202,13 @@ class _SecondaryExamScreenState extends State<SecondaryExamScreen> {
     String current, {
     String? forcedSign,
     String? fieldLabel,
+    // Web shows ONLY the green "+" button for ST Near ADD (no minus).
+    bool positiveOnly = false,
   }) async {
     // Web: picker opens pre-set to the sign of the button pressed; no Plano tab
-    String sign = forcedSign ?? (current.startsWith('-') ? '-' : '+');
+    String sign = positiveOnly ? '+' : (forcedSign ?? (current.startsWith('-') ? '-' : '+'));
+    // Minus = red, Plus = green (web's red "−" / green "+" buttons).
+    Color signColor(String s) => s == '-' ? AppColors.red : AppColors.green;
     final customCtrl = TextEditingController();
 
     // positive master values only in grid; 0.00 pinned last (no sign prefix, matching web)
@@ -3357,7 +3361,7 @@ class _SecondaryExamScreenState extends State<SecondaryExamScreen> {
                     padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
                     child: Row(
                       children: [
-                        for (final s in ['-', '+'])
+                        for (final s in positiveOnly ? const ['+'] : const ['-', '+'])
                           Expanded(
                             child: Padding(
                               padding: const EdgeInsets.symmetric(
@@ -3370,18 +3374,14 @@ class _SecondaryExamScreenState extends State<SecondaryExamScreen> {
                                     vertical: 10,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: sign == s
-                                        ? AppColors.primary
-                                        : Colors.white,
+                                    color: sign == s ? signColor(s) : Colors.white,
                                     borderRadius: BorderRadius.circular(
                                       AppRadius.sm,
                                     ),
                                     border: Border.all(
                                       color: sign == s
-                                          ? AppColors.primary
-                                          : AppColors.primary.withValues(
-                                              alpha: 0.2,
-                                            ),
+                                          ? signColor(s)
+                                          : signColor(s).withValues(alpha: 0.45),
                                     ),
                                   ),
                                   child: Text(
@@ -3390,9 +3390,7 @@ class _SecondaryExamScreenState extends State<SecondaryExamScreen> {
                                     style: TextStyle(
                                       fontSize: 13,
                                       fontWeight: FontWeight.w700,
-                                      color: sign == s
-                                          ? Colors.white
-                                          : AppColors.primary,
+                                      color: sign == s ? Colors.white : signColor(s),
                                     ),
                                   ),
                                 ),
@@ -3907,6 +3905,7 @@ class _SecondaryExamScreenState extends State<SecondaryExamScreen> {
         curAdd,
         forcedSign: curAdd.isEmpty ? '+' : (addIsMinus ? '-' : '+'),
         fieldLabel: '${eye == 're' ? 'RE' : 'LE'} · ADD',
+        positiveOnly: true,
       );
       if (picked != null && mounted) {
         setState(() {

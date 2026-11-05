@@ -10,6 +10,7 @@ import '../widgets/app_animations.dart';
 import '../widgets/app_refresh_indicator.dart';
 import '../widgets/change_password_dialog.dart';
 import '../widgets/skeleton.dart';
+import '../widgets/app_dialog.dart';
 
 /// Tablet Profile screen — centered max-width form (personal settings don't
 /// need full rail-content width) instead of mobile's AppBar+footer sandwich.
@@ -130,7 +131,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void _showChangePasswordDialog() {
     final p = _profile;
     if (p == null) return;
-    showDialog(
+    showAppDialog(
       context: context,
       builder: (_) => ChangePasswordDialog(
         onSubmit: (current, next, _) => ProfileService.instance.updateProfile(

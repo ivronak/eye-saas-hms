@@ -79,7 +79,7 @@ class _FocScreenState extends State<FocScreen> {
     final formKey = GlobalKey<FormState>();
     bool submitting = false;
 
-    await showDialog(
+    await showAppDialog(
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDlg) => AppDialog(
@@ -135,7 +135,7 @@ class _FocScreenState extends State<FocScreen> {
     final formKey = GlobalKey<FormState>();
     bool submitting = false;
 
-    await showDialog(
+    await showAppDialog(
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDlg) => AppDialog(

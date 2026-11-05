@@ -15,7 +15,7 @@ import '../utils/app_date_picker.dart';
 
 /// Doctor's own OT patient drill-down — net new (web pull 2026-08-07,
 /// "Phase 2"): two actions once a patient's ward consult is pending —
-/// Assign OT Assistant (agrees OT, marks Ready) or Refuse Surgery (sends to
+/// Ready for OT (sends to the doctor's connected OT Assistant) or Refuse Surgery (sends to
 /// Accounts for a full refund). Neither app had this screen before. See
 /// WEB_PULL_2026_08_07_APP_PARITY_AUDIT.md §5.
 class DoctorOtListScreen extends StatefulWidget {
@@ -43,7 +43,6 @@ bool _isConsultPending(OtBookingSummary b) {
 class _DoctorOtListScreenState extends State<DoctorOtListScreen> {
   List<OtBookingSummary> _items = [];
   OtPaginationMeta? _meta;
-  List<OtNamedRef> _otAssistants = [];
   bool _loading = true;
   String? _error;
   int _page = 1;
@@ -66,7 +65,6 @@ class _DoctorOtListScreenState extends State<DoctorOtListScreen> {
         setState(() {
           _items = result.items;
           _meta = result.meta;
-          _otAssistants = result.otAssistants;
           _loading = false;
         });
       }
@@ -88,38 +86,14 @@ class _DoctorOtListScreenState extends State<DoctorOtListScreen> {
     }
   }
 
-  Future<void> _assignAssistant(OtBookingSummary item) async {
-    if (_otAssistants.isEmpty) {
-      showAppSnackBar(context, 'No active OT Assistants found.', isError: true);
-      return;
-    }
-    int? selected;
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dCtx) => StatefulBuilder(builder: (_, ss) => AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.lg)),
-            title: const Text('Assign OT Assistant'),
-            content: DropdownButtonFormField<int>(
-              initialValue: selected,
-              isExpanded: true,
-              decoration: const InputDecoration(labelText: 'OT Assistant *', border: OutlineInputBorder()),
-              items: _otAssistants.map((a) => DropdownMenuItem(value: a.id, child: Text(a.name, overflow: TextOverflow.ellipsis))).toList(),
-              onChanged: (v) => ss(() => selected = v),
-            ),
-            actions: [
-              TextButton(onPressed: () => Navigator.pop(dCtx, false), child: const Text('Cancel')),
-              ElevatedButton(
-                onPressed: selected == null ? null : () => Navigator.pop(dCtx, true),
-                style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white),
-                child: const Text('Assign & Mark Ready'),
-              ),
-            ],
-          )),
-    );
-    if (confirmed != true || selected == null || !mounted) return;
+    /// Web pull 2026-10-19: the OT Assistant picker is gone — "Ready for OT"
+  /// sends the patient to this booking's doctor's connected OT Assistant
+  /// (resolved server-side from the doctor's profile), same auto-assign the
+  /// ward's "Ready for OT" uses.
+  Future<void> _readyForOt(OtBookingSummary item) async {
     try {
-      await DoctorOtListService.instance.assignAssistant(item.id, otAssistantId: selected!);
-      if (mounted) showAppSnackBar(context, 'OT Assistant assigned. Patient is Ready for OT.', isSuccess: true);
+      await DoctorOtListService.instance.assignAssistant(item.id);
+      if (mounted) showAppSnackBar(context, 'Patient assigned to OT Assistant and marked Ready for OT.', isSuccess: true);
       _load();
     } catch (e) {
       if (mounted) showAppSnackBar(context, e.toString().replaceFirst('Exception: ', ''), isError: true);
@@ -233,9 +207,9 @@ class _DoctorOtListScreenState extends State<DoctorOtListScreen> {
                   Row(children: [
                     Expanded(
                       child: OutlinedButton(
-                        onPressed: () => _assignAssistant(item),
+                        onPressed: () => _readyForOt(item),
                         style: OutlinedButton.styleFrom(foregroundColor: AppColors.primary, side: BorderSide(color: AppColors.primary.withValues(alpha: 0.4))),
-                        child: const Text('Assign Assistant', style: TextStyle(fontSize: 12)),
+                        child: const Text('Ready for OT', style: TextStyle(fontSize: 12)),
                       ),
                     ),
                     const SizedBox(width: 8),

@@ -22,6 +22,7 @@ import '../utils/app_route.dart';
 import '../utils/date_format.dart';
 import 'opd_bill_screen.dart';
 import 'patient_checkin_screen.dart';
+import '../widgets/app_dialog.dart';
 
 /// Phone appointment history. Web page `phone-history.blade.php`: search by
 /// name or mobile, optional date range, then the phone list.
@@ -126,7 +127,7 @@ class _PhoneHistoryScreenState extends State<PhoneHistoryScreen> {
   }
 
   Future<void> _checkIn(Patient p) async {
-    await showDialog<void>(
+    await showAppDialog<void>(
       context: context,
       builder: (dCtx) => PatientCheckinScreen(
         user: widget.user,

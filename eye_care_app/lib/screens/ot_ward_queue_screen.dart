@@ -41,23 +41,14 @@ class _OtWardQueueScreenState extends State<OtWardQueueScreen> {
   DateTime _fromDate = DateTime.now();
   DateTime _toDate = DateTime.now();
 
-  // Web parity (`ward.blade.php`'s Dilate column) — a live mm:ss countdown
-  // to each row's dilation-unlock time, ticking every second via a plain
-  // rebuild (cheap — no refetch) rather than a per-row Timer.
-  Timer? _dilateTicker;
-
   @override
   void initState() {
     super.initState();
     _load();
-    _dilateTicker = Timer.periodic(const Duration(seconds: 1), (_) {
-      if (mounted) setState(() {});
-    });
   }
 
   @override
   void dispose() {
-    _dilateTicker?.cancel();
     super.dispose();
   }
 
@@ -211,7 +202,7 @@ class _OtWardQueueScreenState extends State<OtWardQueueScreen> {
             OtDeskFilterBar(
               options: const [
                 OtFilterOption('queue', 'Queue'),
-                OtFilterOption('history', 'All'),
+                OtFilterOption('history', 'Completed'),
               ],
               selected: _filter,
               onChanged: _setFilter,
@@ -254,7 +245,7 @@ class _OtWardQueueScreenState extends State<OtWardQueueScreen> {
           final item = _items[i];
           final (stageLabel, stageColor) = _wardStageStyle(item.otStatus);
           final ps = item.paymentStatus;
-          final dilateUnlock = _dilateUnlockAt(item);
+          final doseCount = item.dilationEntries.length;
           return AnimatedListItem(
             index: i,
             child: AppRecordCard(
@@ -263,7 +254,7 @@ class _OtWardQueueScreenState extends State<OtWardQueueScreen> {
               subtitle: item.patient?.patientCode,
               trailing: AppStatusPill(label: stageLabel, color: stageColor),
               // Web parity (`accountant/ward.blade.php`'s list row): Phone +
-              // Dilate + Payment — no OT Date column on this list (the detail
+              // Dose + Payment — no OT Date column on this list (the detail
               // view dialog below still shows it, matching `_view-modal.blade.php`).
               fields: [
                 AppRecordField(
@@ -272,12 +263,14 @@ class _OtWardQueueScreenState extends State<OtWardQueueScreen> {
                   icon: Icons.phone_outlined,
                   color: RecordFieldColors.phone,
                 ),
-                if (dilateUnlock != null)
+                // Web pull 2026-10-17: the Dilate countdown column became "Dose"
+                // — how many eye-drop doses have been logged so far.
+                if (doseCount > 0)
                   AppRecordField(
-                    'Dilate',
-                    _dilateCountdownLabel(dilateUnlock),
+                    'Dose',
+                    '$doseCount',
                     icon: Icons.water_drop_outlined,
-                    color: dilateUnlock.isAfter(DateTime.now()) ? AppColors.orange : AppColors.green,
+                    color: AppColors.blue,
                   ),
                 if (ps != null)
                   AppRecordField(
@@ -313,34 +306,6 @@ class _OtWardQueueScreenState extends State<OtWardQueueScreen> {
       ),
     );
   }
-}
-
-// Web parity (`ward.blade.php`'s Dilate column) — the latest logged dose
-// with dilate='Yes' and a dilation_time set, resolved to the actual
-// wall-clock moment it unlocks (administered_at + dilation_time minutes).
-// Null when no such dose has been logged.
-DateTime? _dilateUnlockAt(OtBookingSummary item) {
-  OtEyeDropEntry? latest;
-  DateTime? latestAt;
-  for (final d in item.dilationEntries) {
-    if (d.dilate != 'Yes' || d.dilationTime == null) continue;
-    final at = DateTime.tryParse(d.administeredAt ?? '');
-    if (at == null) continue;
-    if (latestAt == null || at.isAfter(latestAt)) {
-      latest = d;
-      latestAt = at;
-    }
-  }
-  if (latest == null || latestAt == null) return null;
-  return latestAt.add(Duration(minutes: latest.dilationTime!));
-}
-
-String _dilateCountdownLabel(DateTime unlockAt) {
-  final diff = unlockAt.difference(DateTime.now());
-  if (diff.isNegative) return 'Ready';
-  final m = diff.inMinutes;
-  final s = diff.inSeconds.remainder(60);
-  return '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
 }
 
 String _wardDrName(String? name) {
@@ -684,15 +649,6 @@ Future<void> showOtWardBookingViewDialog(
                                       color: AppColors.textSecondary,
                                     ),
                                   ),
-                                  if (d.dilate == 'Yes')
-                                    Text(
-                                      'Dilated${d.dilationTime != null ? ' · ${d.dilationTime} mins' : ''}',
-                                      style: const TextStyle(
-                                        fontSize: 10.5,
-                                        fontWeight: FontWeight.w700,
-                                        color: AppColors.tealDark,
-                                      ),
-                                    ),
                                 ],
                               ),
                             ),

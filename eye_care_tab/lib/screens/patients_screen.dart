@@ -273,7 +273,7 @@ class _PatientsScreenState extends State<PatientsScreen> implements Refreshable 
   }
 
   Future<void> _openViewDialog(Patient p) async {
-    await showDialog<void>(
+    await showAppDialog<void>(
       context: context,
       builder: (dCtx) => _PatientDetailView(
         patient: p,
@@ -291,7 +291,7 @@ class _PatientsScreenState extends State<PatientsScreen> implements Refreshable 
   }
 
   Future<void> _openCheckin(Patient p) async {
-    await showDialog<void>(
+    await showAppDialog<void>(
       context: context,
       builder: (_) => PatientCheckinScreen(
         user: widget.user,

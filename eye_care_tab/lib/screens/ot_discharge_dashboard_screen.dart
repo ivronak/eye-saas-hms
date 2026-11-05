@@ -189,7 +189,7 @@ class _OtDischargeDashboardScreenState extends State<OtDischargeDashboardScreen>
       showOtDischargeBookingDetail(context, item);
 
   Future<void> _generateInvoice(OtBookingSummary item) async {
-    final result = await showDialog<_InvoiceDraft>(
+    final result = await showAppDialog<_InvoiceDraft>(
       context: context,
       builder: (_) => const _GenerateInvoiceDialog(),
     );
@@ -343,7 +343,7 @@ class _OtDischargeDashboardScreenState extends State<OtDischargeDashboardScreen>
                 SegmentedPillToggle<String>(
                   options: const [
                     (value: 'queue', label: 'Queue'),
-                    (value: 'history', label: 'All'),
+                    (value: 'history', label: 'Completed'),
                   ],
                   selected: _filter,
                   onChanged: _setFilter,
@@ -641,7 +641,7 @@ class _GenerateInvoiceDialogState extends State<_GenerateInvoiceDialog> {
 /// Counter desk panel so both call the exact same dialog.
 Future<int?> askOtDischargeCertificateRestDays(BuildContext context) async {
   final ctrl = TextEditingController(text: '7');
-  final result = await showDialog<int>(
+  final result = await showAppDialog<int>(
     context: context,
     builder: (ctx) => AppDialog(
       size: AppDialogSize.small,
@@ -680,7 +680,7 @@ Future<int?> askOtDischargeCertificateRestDays(BuildContext context) async {
 /// (`Y-m-d`) or null if cancelled. Shared with the dashboard home's compact
 /// Discharge Counter desk panel so both call the exact same dialog widget.
 Future<String?> showOtGenerateInvoiceDialog(BuildContext context) async {
-  final result = await showDialog<_InvoiceDraft>(
+  final result = await showAppDialog<_InvoiceDraft>(
     context: context,
     builder: (_) => const _GenerateInvoiceDialog(),
   );

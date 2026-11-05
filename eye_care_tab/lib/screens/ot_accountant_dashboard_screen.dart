@@ -1085,9 +1085,8 @@ class _ReceiptPreview extends StatelessWidget {
 /// numerically matches the shown amount.
 Future<bool> _confirmOtPaymentAmount(BuildContext context, double amount) async {
   final ctrl = TextEditingController();
-  final confirmed = await showDialog<bool>(
+  final confirmed = await showAppDialog<bool>(
     context: context,
-    barrierDismissible: false,
     builder: (dCtx) => StatefulBuilder(
       builder: (_, ss) {
         final entered = double.tryParse(ctrl.text.trim());
@@ -1219,9 +1218,8 @@ Future<void> openOtRecordPaymentDialog(
     }
   }
 
-  await showDialog<void>(
+  await showAppDialog<void>(
     context: context,
-    barrierDismissible: false,
     builder: (dCtx) => StatefulBuilder(
       builder: (_, ss) {
         if (loadingForm && formData == null && formError == null) {
@@ -1451,9 +1449,8 @@ Future<void> openOtFullRefundDialog(
   required int bookingId,
   required VoidCallback onDone,
 }) {
-  return showDialog<void>(
+  return showAppDialog<void>(
     context: context,
-    barrierDismissible: false,
     builder: (_) => _RefundDialog(bookingId: bookingId),
   ).then((_) => onDone());
 }
@@ -1465,7 +1462,7 @@ Future<void> openOtPaymentReceiptDialog(
   required int paymentId,
   String? patientName,
 }) {
-  return showDialog<void>(
+  return showAppDialog<void>(
     context: context,
     builder: (_) =>
         _ReceiptDialog(paymentId: paymentId, patientName: patientName),

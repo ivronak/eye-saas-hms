@@ -39,7 +39,6 @@ Map<String, _ReportMeta> get _itemMeta => <String, _ReportMeta>{
   'hospital-report': _ReportMeta(Icons.description_rounded, AppColors.primary),
   'surgery-wise': _ReportMeta(Icons.cut_rounded, AppColors.orange),
   'doctor-wise': _ReportMeta(Icons.person_rounded, AppColors.teal),
-  'lens-usage': _ReportMeta(Icons.remove_red_eye_rounded, AppColors.blue),
   'lens-report': _ReportMeta(Icons.remove_red_eye_rounded, AppColors.purple),
   'complications': _ReportMeta(
     Icons.warning_amber_rounded,

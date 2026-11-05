@@ -240,7 +240,7 @@ void showAppSnackBar(
 /// the form and prompt the list to refresh (e.g. an `onCancel` callback for
 /// an embedded pane, or `Navigator.pop(true)` for a pushed route).
 Future<void> showStaleRecordDialog(BuildContext context, String message, VoidCallback onReload) {
-  return showDialog<void>(
+  return showAppDialog<void>(
     context: context,
     barrierDismissible: false,
     builder: (ctx) => AppDialog(

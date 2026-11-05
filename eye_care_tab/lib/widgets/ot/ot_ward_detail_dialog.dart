@@ -32,7 +32,7 @@ Widget _eyeDropsTable(List<OtEyeDropEntry> drops) {
         child: Text(text, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: header ? 12 : 13, fontWeight: header ? FontWeight.w700 : FontWeight.w600, color: header ? AppColors.textSecondary : AppColors.textPrimary)),
       );
   return Table(
-    columnWidths: const {0: FlexColumnWidth(1.3), 1: FlexColumnWidth(1.3), 2: FlexColumnWidth(0.7), 3: FlexColumnWidth(0.7), 4: FlexColumnWidth(0.8), 5: FlexColumnWidth(1.1), 6: FlexColumnWidth(1.1)},
+    columnWidths: const {0: FlexColumnWidth(1.3), 1: FlexColumnWidth(1.3), 2: FlexColumnWidth(0.7), 3: FlexColumnWidth(0.7), 4: FlexColumnWidth(0.8), 5: FlexColumnWidth(1.1)},
     children: [
       TableRow(decoration: BoxDecoration(border: Border(bottom: BorderSide(color: AppColors.primaryA12))), children: [
         cell('Time', header: true),
@@ -41,7 +41,6 @@ Widget _eyeDropsTable(List<OtEyeDropEntry> drops) {
         cell('Dose', header: true),
         cell('Drops', header: true),
         cell('Given by', header: true),
-        cell('Dilate', header: true),
       ]),
       // API returns doses oldest-first (administered_at asc, matching web);
       // reversed so the most recent dose shows first instead of scrolled
@@ -54,7 +53,6 @@ Widget _eyeDropsTable(List<OtEyeDropEntry> drops) {
           cell('${d.doseNumber}'),
           cell(d.dropsCount?.toString() ?? '—'),
           cell(d.administeredBy?.name ?? '—'),
-          cell(d.dilate == 'Yes' ? 'Yes${d.dilationTime != null ? ' · ${d.dilationTime}m' : ''}' : '—'),
         ]),
     ],
   );

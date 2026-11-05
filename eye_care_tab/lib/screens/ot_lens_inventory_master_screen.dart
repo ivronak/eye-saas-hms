@@ -133,7 +133,7 @@ class _OtLensInventoryMasterScreenState
     bool saving = false;
     String? codeErr, nameErr, typeErr, mrpErr, stockErr;
 
-    await showDialog<void>(
+    await showAppDialog<void>(
       context: context,
       builder: (dCtx) => StatefulBuilder(
         builder: (_, ss) {

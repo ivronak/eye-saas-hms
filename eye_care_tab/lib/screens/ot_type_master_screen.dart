@@ -90,7 +90,7 @@ class _OtTypeMasterScreenState extends State<OtTypeMasterScreen> {
   }
 
   Future<void> _openDialog({OtTypeMasterItem? item}) async {
-    final saved = await showDialog<bool>(
+    final saved = await showAppDialog<bool>(
       context: context,
       builder: (_) =>
           _OtTypeDialog(item: item, accentColor: widget.accentColor),

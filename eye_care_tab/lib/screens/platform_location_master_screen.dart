@@ -190,7 +190,7 @@ class _CountriesTabState extends State<_CountriesTab>
     final nameCtrl = TextEditingController(text: item?.name ?? '');
     final tzCtrl = TextEditingController(text: item?.defaultTimezone ?? '');
     final formKey = GlobalKey<FormState>();
-    final saved = await showDialog<bool>(
+    final saved = await showAppDialog<bool>(
       context: context,
       builder: (ctx) => _locationFormDialog(
         ctx,
@@ -394,7 +394,7 @@ class _StatesTabState extends State<_StatesTab>
     int? selCountryId = item?.countryId ?? _countryId;
     final nameCtrl = TextEditingController(text: item?.name ?? '');
     final formKey = GlobalKey<FormState>();
-    final saved = await showDialog<bool>(
+    final saved = await showAppDialog<bool>(
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, ss) => _locationFormDialog(
@@ -615,7 +615,7 @@ class _DistrictsTabState extends State<_DistrictsTab>
     int? selStateId = item?.stateId ?? _stateId;
     final nameCtrl = TextEditingController(text: item?.name ?? '');
     final formKey = GlobalKey<FormState>();
-    final saved = await showDialog<bool>(
+    final saved = await showAppDialog<bool>(
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, ss) => _locationFormDialog(
@@ -837,7 +837,7 @@ class _CitiesTabState extends State<_CitiesTab>
     int? selDistrictId = item?.districtId ?? _districtId;
     final nameCtrl = TextEditingController(text: item?.name ?? '');
     final formKey = GlobalKey<FormState>();
-    final saved = await showDialog<bool>(
+    final saved = await showAppDialog<bool>(
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, ss) {

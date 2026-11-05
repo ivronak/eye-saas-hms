@@ -139,31 +139,6 @@ class _OtLensReportScreenState extends State<OtLensReportScreen> {
     );
   }
 
-  Widget _summaryCard(String label, String value, IconData icon, Color color) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 10),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(AppRadius.md),
-          border: Border.all(color: color.withValues(alpha: 0.18)),
-        ),
-        child: Column(children: [
-          Container(
-            width: 34, height: 34,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(color: color.withValues(alpha: 0.12), shape: BoxShape.circle),
-            child: Icon(icon, size: 18, color: color),
-          ),
-          const SizedBox(height: 8),
-          Text(value, style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: color)),
-          const SizedBox(height: 2),
-          Text(label, textAlign: TextAlign.center, style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.w600, color: AppColors.textSecondary)),
-        ]),
-      ),
-    );
-  }
-
   TextStyle _cellStyle(bool lead) => TextStyle(
         fontSize: lead ? 14 : 13.5,
         fontWeight: lead ? FontWeight.w800 : FontWeight.w600,
@@ -178,44 +153,18 @@ class _OtLensReportScreenState extends State<OtLensReportScreen> {
         physics: const AlwaysScrollableScrollPhysics(),
         children: [
           Row(children: [
-            _summaryCard('Lenses Used', '${d.summary.totalLensesUsed}', Icons.remove_red_eye_rounded, AppColors.purple),
-            const SizedBox(width: 10),
-            _summaryCard('Surgeries', '${d.summary.totalSurgeries}', Icons.cut_rounded, AppColors.teal),
-            const SizedBox(width: 10),
-            _summaryCard('Unique Powers', '${d.summary.uniquePowers}', Icons.blur_circular_rounded, AppColors.blue),
-          ]),
-          if (d.powerSummary.isNotEmpty) ...[
-            const SizedBox(height: 14),
+            Expanded(child: Text('Lens Power Breakdown', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.purple))),
             Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(AppRadius.md),
-                border: Border.all(color: AppColors.primaryA08),
-              ),
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text('Power Breakdown', style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w800, color: AppColors.purple)),
-                const SizedBox(height: 10),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: d.powerSummary.map((row) => Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-                        decoration: BoxDecoration(color: const Color(0xFFF4F8FB), borderRadius: BorderRadius.circular(AppRadius.full)),
-                        child: Text('+${row.power}D × ${row.quantity}', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.purple)),
-                      )).toList(),
-                ),
-              ]),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              decoration: BoxDecoration(color: AppColors.purple.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(AppRadius.full)),
+              child: Text('${d.rows.length} rows', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: AppColors.purple)),
             ),
-          ],
-          const SizedBox(height: 14),
-          Text('Lens Usage Detail', style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w800, color: AppColors.purple)),
+          ]),
           const SizedBox(height: 10),
-          if (d.detailRows.isEmpty)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 24),
-              child: Center(child: Text('No data for ${d.from} – ${d.to}', style: const TextStyle(color: AppColors.textSecondary))),
+          if (d.rows.isEmpty)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 24),
+              child: Center(child: Text('No lens usage for the selected range.', style: TextStyle(color: AppColors.textSecondary))),
             )
           else
             LayoutBuilder(
@@ -233,14 +182,14 @@ class _OtLensReportScreenState extends State<OtLensReportScreen> {
                     columnSpacing: 22,
                     horizontalMargin: 16,
                     dividerThickness: 0,
-                    columns: d.detailHeadings.map((h) => DataColumn(label: Text(h))).toList(),
+                    columns: d.headings.map((h) => DataColumn(label: Text(h))).toList(),
                     rows: [
-                      for (var i = 0; i < d.detailRows.length; i++)
+                      for (var i = 0; i < d.rows.length; i++)
                         DataRow(
                           color: WidgetStateProperty.all(i.isEven ? Colors.white : AppColors.purple.withValues(alpha: 0.05)),
                           cells: [
-                            for (var c = 0; c < d.detailRows[i].length; c++)
-                              DataCell(Text('${d.detailRows[i][c]}', style: _cellStyle(c == 1))),
+                            for (var c = 0; c < d.rows[i].length; c++)
+                              DataCell(Text('${d.rows[i][c]}', style: _cellStyle(c == 0))),
                           ],
                         ),
                     ],
