@@ -63,7 +63,7 @@ class PlatformPlanApiController extends Controller
             'monthly_price'      => ['required', 'integer', 'min:1', 'max:99999'],
             'quarterly_discount' => ['required', 'integer', 'min:0', 'max:70'],
             'yearly_discount'    => ['required', 'integer', 'min:0', 'max:70'],
-            'trial_days'         => ['required', 'integer', 'min:1', 'max:90'],
+            'trial_days'         => ['required', 'integer', 'min:1', 'max:730'],
             'grace_days'         => ['required', 'integer', 'min:1', 'max:30'],
             'features'           => ['nullable', 'array'],
             'features.*'         => ['string', 'max:120'],

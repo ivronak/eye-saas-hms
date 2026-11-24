@@ -295,9 +295,15 @@
                 <div class="col-6">
                     <div class="hms-form-group">
                         <label class="hms-label">Trial Days</label>
-                        <input type="number" name="trial_days" class="hms-input"
-                               value="{{ $trialDays }}" min="1" max="90" required>
-                        <span class="hms-hint">Days of free access after registration</span>
+                        <div style="display:flex;gap:.35rem;flex-wrap:wrap;margin-bottom:.35rem">
+                            <button type="button" class="hms-btn hms-btn-outline hms-btn-sm trial-days-preset"
+                                data-days="180" style="padding:.25rem .5rem;font-size:.72rem">6 Months</button>
+                            <button type="button" class="hms-btn hms-btn-outline hms-btn-sm trial-days-preset"
+                                data-days="365" style="padding:.25rem .5rem;font-size:.72rem">1 Year</button>
+                        </div>
+                        <input type="number" name="trial_days" id="planTrialDaysInput" class="hms-input"
+                               value="{{ $trialDays }}" min="1" max="730" required>
+                        <span class="hms-hint">Preset or custom days (max 730 / 2 years)</span>
                     </div>
                 </div>
                 <div class="col-6">
@@ -463,5 +469,16 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('editPricingModal').showModal();
 });
 @endif
+
+document.addEventListener('DOMContentLoaded', function () {
+    var planTrialInput = document.getElementById('planTrialDaysInput');
+    document.querySelectorAll('.trial-days-preset').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            if (!planTrialInput) { return; }
+            planTrialInput.value = btn.getAttribute('data-days') || '14';
+            planTrialInput.focus();
+        });
+    });
+});
 </script>
 @endpush

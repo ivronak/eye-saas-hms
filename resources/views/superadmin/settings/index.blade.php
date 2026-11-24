@@ -33,9 +33,21 @@
                 </div>
                 <div class="hms-form-group" style="margin-bottom:0">
                     <label class="hms-label">Trial Days (new registrations)</label>
-                    <input type="number" name="trial_days" class="hms-input @error('trial_days') is-invalid @enderror"
-                        value="{{ old('trial_days', $settings->get('trial_days')?->value ?? 14) }}" min="1" max="90">
-                    @error('trial_days') <span class="hms-error">{{ $message }}</span> @enderror
+                    <div style="display:flex;gap:.35rem;flex-wrap:wrap;margin-bottom:.4rem">
+                        <button type="button" class="hms-btn hms-btn-outline hms-btn-sm trial-days-preset"
+                            data-days="180" style="padding:.3rem .55rem;font-size:.75rem">6 Months</button>
+                        <button type="button" class="hms-btn hms-btn-outline hms-btn-sm trial-days-preset"
+                            data-days="365" style="padding:.3rem .55rem;font-size:.75rem">1 Year</button>
+                    </div>
+                    <input type="number" name="trial_days" id="trialDaysInput"
+                        class="hms-input @error('trial_days') is-invalid @enderror"
+                        value="{{ old('trial_days', $settings->get('trial_days')?->value ?? 14) }}"
+                        min="1" max="730" title="Custom days (1–730)">
+                    @error('trial_days')
+                        <span class="hms-error">{{ $message }}</span>
+                    @else
+                        <small class="text-muted">Preset or custom days (max 730 / 2 years)</small>
+                    @enderror
                 </div>
                 <div class="hms-form-group" style="margin-bottom:0">
                     <label class="hms-label">GST Rate — India (%)</label>
@@ -193,3 +205,18 @@
     </form>
 
 @endsection
+
+@push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var trialInput = document.getElementById('trialDaysInput');
+            document.querySelectorAll('.trial-days-preset').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    if (!trialInput) { return; }
+                    trialInput.value = btn.getAttribute('data-days') || '14';
+                    trialInput.focus();
+                });
+            });
+        });
+    </script>
+@endpush

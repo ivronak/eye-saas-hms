@@ -47,7 +47,7 @@ class PlatformSettingsApiController extends Controller
         $validated = $request->validate([
             'platform_name'           => ['required', 'string', 'max:100'],
             'support_email'           => EmailRules::required(100),
-            'trial_days'              => ['required', 'integer', 'min:1', 'max:90'],
+            'trial_days'              => ['required', 'integer', 'min:1', 'max:730'],
             'razorpay_key'            => ['nullable', 'string', 'max:255'],
             'razorpay_secret'         => ['nullable', 'string', 'max:255'],
             'razorpay_webhook_secret' => ['nullable', 'string', 'max:255'],

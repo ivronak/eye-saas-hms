@@ -196,14 +196,33 @@
                     </button>
                 </form>
 
-                <form method="POST" action="{{ route('superadmin.hospitals.extend', $tenant) }}"
-                    style="display:flex;gap:.5rem;align-items:center">
+                <form method="POST" action="{{ route('superadmin.hospitals.extend', $tenant) }}" id="extendGraceForm"
+                    style="display:flex;flex-direction:column;gap:.5rem">
                     @csrf
-                    <input type="number" name="days" class="hms-input"
-                        style="width:70px;padding:.35rem .5rem;text-align:center" min="1" max="90" value="7">
-                    <button type="submit" class="hms-btn hms-btn-outline hms-btn-sm" style="flex:1">
-                        <i class="bi bi-clock-history"></i> Extend Grace
-                    </button>
+                    <div style="display:flex;gap:.35rem;flex-wrap:wrap">
+                        <button type="button" class="hms-btn hms-btn-outline hms-btn-sm extend-grace-preset"
+                            data-days="180" style="flex:1;min-width:0;padding:.3rem .4rem;font-size:.75rem">
+                            6 Months
+                        </button>
+                        <button type="button" class="hms-btn hms-btn-outline hms-btn-sm extend-grace-preset"
+                            data-days="365" style="flex:1;min-width:0;padding:.3rem .4rem;font-size:.75rem">
+                            1 Year
+                        </button>
+                    </div>
+                    <div style="display:flex;gap:.5rem;align-items:center">
+                        <input type="number" name="days" id="extendGraceDays"
+                            class="hms-input @error('days') is-invalid @enderror"
+                            style="width:80px;padding:.35rem .5rem;text-align:center" min="1" max="730"
+                            value="{{ old('days', 7) }}" title="Custom days (1–730)" placeholder="Days" required>
+                        <button type="submit" class="hms-btn hms-btn-outline hms-btn-sm" style="flex:1">
+                            <i class="bi bi-clock-history"></i> Extend Grace
+                        </button>
+                    </div>
+                    @error('days')
+                        <small style="color:#c0392b;font-size:.72rem">{{ $message }}</small>
+                    @else
+                        <small style="color:#64748b;font-size:.7rem;line-height:1.3">Preset or custom days (max 730 / 2 years)</small>
+                    @enderror
                 </form>
 
                 @if(!$tenant->trashed())
@@ -351,7 +370,7 @@
 @endpush
 
 @push('scripts')
-    @if($errors->any())
+    @if($errors->any() && ! $errors->has('days'))
         <script>
             document.addEventListener('DOMContentLoaded', function () {
                 var modal = document.getElementById('editHospitalModal');
@@ -396,6 +415,17 @@
                             btn.innerHTML = '<i class="bi bi-clipboard"></i>';
                         }, 1200);
                     });
+                });
+            });
+
+            var extendDaysInput = document.getElementById('extendGraceDays');
+            var extendGraceForm = document.getElementById('extendGraceForm');
+            document.querySelectorAll('.extend-grace-preset').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    if (!extendDaysInput || !extendGraceForm) { return; }
+                    extendDaysInput.value = btn.getAttribute('data-days') || '7';
+                    extendDaysInput.setCustomValidity('');
+                    extendGraceForm.requestSubmit();
                 });
             });
         });
