@@ -36,7 +36,7 @@ class SettingsController extends Controller
         $validated = $request->validate([
             'platform_name' => ['required', 'string', 'max:100'],
             'support_email' => EmailRules::required(100),
-            'trial_days' => ['required', 'integer', 'min:1', 'max:90'],
+            'trial_days' => ['required', 'integer', 'min:1', 'max:730'],
             'gst_rate_india' => ['nullable', 'numeric', 'min:0', 'max:100'],
             'razorpay_key' => ['nullable', 'string', 'max:255'],
             'razorpay_secret' => ['nullable', 'string', 'max:255'],
@@ -53,6 +53,7 @@ class SettingsController extends Controller
         ], [
             ...EmailRules::messages('support_email'),
             ...EmailRules::messages('mail_from_email'),
+            'trial_days.max' => 'Trial days can be at most 730 (2 years).',
         ]);
 
         $encryptedKeys = ['razorpay_key', 'razorpay_secret', 'razorpay_webhook_secret', 'mail_password'];

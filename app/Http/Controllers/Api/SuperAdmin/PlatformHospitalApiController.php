@@ -220,7 +220,7 @@ class PlatformHospitalApiController extends Controller
         $tenant = Tenant::find($id);
         if (! $tenant) return response()->json(['success' => false, 'message' => 'Not found.'], 404);
 
-        $days = $request->validate(['days' => ['required', 'integer', 'min:1', 'max:90']])['days'];
+        $days = $request->validate(['days' => ['required', 'integer', 'min:1', 'max:730']])['days'];
         $this->tenantService->extendGrace($tenant, $days);
         $this->auditLog($request, 'hospital.grace.extended', $id, "Grace extended by {$days} days", [], ['days' => $days]);
 

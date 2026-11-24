@@ -266,7 +266,12 @@ class TenantController extends Controller
      */
     public function extend(Tenant $tenant): RedirectResponse
     {
-        $days = request()->validate(['days' => ['required', 'integer', 'min:1', 'max:90']])['days'];
+        $days = request()->validate([
+            'days' => ['required', 'integer', 'min:1', 'max:730'],
+        ], [
+            'days.max' => 'Grace can be extended by at most 730 days (2 years).',
+            'days.min' => 'Days must be at least 1.',
+        ])['days'];
         $this->tenantService->extendGrace($tenant, $days);
         $this->auditLog(
             'hospital.grace.extended',
